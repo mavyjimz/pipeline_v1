@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
-.venv/
+venv/
 logs/
 *.7z
 *.zip
