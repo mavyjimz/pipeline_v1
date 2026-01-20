@@ -1,28 +1,20 @@
-import os
 import pandas as pd
-import time
+import os
 
-def scan_input_folder(folder_path):
-    print(f"--- Scanning Intake Valve: {folder_path} ---")
+def check_raw_data():
+    # REVISED PATH: Pointing to your D: drive Warehouse
+    file_path = r'D:\MLOps\input_data\raw\test_data.csv'
     
-    # List all files in the directory
-    files = os.listdir(folder_path)
+    print(f"🔍 Intake Valve: Checking {file_path}")
     
-    # Filter for only CSV or Excel files
-    data_files = [f for f in files if f.endswith('.csv') or f.endswith('.xlsx')]
-    
-    if not data_files:
-        print("⚠️ No data files found. Please drop a CSV or XLSX in the folder.")
-        return []
-    
-    print(f"✅ Found {len(data_files)} file(s) ready for processing:")
-    for file in data_files:
-        print(f"   - {file}")
-    
-    return data_files
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path)
+        print("✅ Data Found!")
+        print(f"📊 Summary: {len(df)} rows and {len(df.columns)} columns detected.")
+        print("📝 First 5 rows:")
+        print(df.head())
+    else:
+        print(f"❌ Error: Could not find the file at {file_path}")
 
 if __name__ == "__main__":
-    # Correcting the path to match your folder: input_data/raw
-    # We point to 'raw' because we don't want to scan the 'processed' folder again!
-    INPUT_DIR = "input_data/raw" 
-    scan_input_folder(INPUT_DIR)
+    check_raw_data()
