@@ -16,7 +16,7 @@ def monitor_gpu():
             # Heartbeat check
             timestamp = time.strftime('%H:%M:%S')
             # In DirectML, we check if the device is active
-            status = "ACTIVE" if torch.is_available() else "IDLE"
+            status = "ACTIVE" if torch_directml.is_available() else "IDLE"
             print(f"\r[VRAM Status] Device: {device} | Status: {status} | Time: {timestamp}", end="")
             time.sleep(1)
     except KeyboardInterrupt:
