@@ -1,23 +1,26 @@
+import pandas as pd
 import os
-import shutil
-import logging
 
-# Setup Logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-
-def ingest_process():
-    raw_dir = "../../input_data/raw/"
-    # WE are explicitly looking for your superstore file now
-    target_file = "superstore_sales.csv" 
+def ingest_data():
+    # SETUP PATHS TO MLOPS ROOT (3 levels up from src)
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    MLOPS_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(SCRIPT_DIR)))
     
-    source_path = os.path.join(raw_dir, target_file)
-
-    if os.path.exists(source_path):
-        logging.info(f"SUCCESS: Found {target_file}. Ready for processing.")
-        return True
-    else:
-        logging.error(f"FAIL: {target_file} not found in {raw_dir}")
-        return False
+    DATA_DIR = os.path.join(MLOPS_ROOT, 'data', 'input_data')
+    os.makedirs(DATA_DIR, exist_ok=True)
+    
+    file_path = os.path.join(DATA_DIR, 'raw_data.csv')
+    
+    # Create sample data
+    data = {
+        'Date': pd.date_range(start='2025-01-01', periods=10, freq='D'),
+        'Sales': [100, 150, 120, 200, 180, 250, 220, 300, 280, 350],
+        'Temperature': [22, 24, 21, 25, 26, 28, 27, 30, 29, 31]
+    }
+    
+    df = pd.DataFrame(data)
+    df.to_csv(file_path, index=False)
+    print(f"SUCCESS: Data ingested to {file_path}")
 
 if __name__ == "__main__":
-    ingest_process()
+    ingest_data()

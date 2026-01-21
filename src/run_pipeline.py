@@ -3,55 +3,44 @@ import sys
 import logging
 import os
 
-# 1. FIX PATHING: Get the absolute path to the project root
-# This ensures it finds the 'logs' folder whether you run from root or src
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOG_FILE = os.path.join(BASE_DIR, "logs", "pipeline_history.log")
+# --- 1. SYNCED PATHING (MLOps ROOT) ---
+# SCRIPT_DIR is MLOps/projects/pipeline_v1/src
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Move up THREE levels to get to D:/MLOps
+# src -> pipeline_v1 -> projects -> MLOps
+MLOPS_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(SCRIPT_DIR)))
 
-# Create logs directory if it doesn't exist
-os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+LOG_FOLDER = os.path.join(MLOPS_ROOT, "logs")
+LOG_FILE = os.path.join(LOG_FOLDER, "pipeline_history.log")
 
-# 2. SETUP LOGGING
+os.makedirs(LOG_FOLDER, exist_ok=True)
+
+# --- 2. LOGGING ---
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(LOG_FILE),
+        logging.FileHandler(LOG_FILE, encoding='utf-8'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 
-def run_step(script_name):
-    script_path = os.path.join("src", script_name)
-    logging.info(f"--- Starting Stage: {script_name} ---")
-    
+def run_worker(file_name):
+    worker_path = os.path.join(SCRIPT_DIR, file_name)
+    logging.info(f"--- EXECUTING: {file_name} ---")
     try:
-        result = subprocess.run(
-            [sys.executable, script_path],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        print(result.stdout)
-        logging.info(f"--- Completed Stage: {script_name} ---")
-        return True
+        result = subprocess.run([sys.executable, worker_path], capture_output=True, text=True, check=True)
+        logging.info(result.stdout)
+        logging.info(f"--- SUCCESS: {file_name} finished ---")
     except subprocess.CalledProcessError as e:
-        logging.error(f"CRITICAL ERROR in {script_name}")
-        print(f"Error Details: {e.stderr}")
-        return False
+        logging.error(f"!!! CRASH IN {file_name} !!!\n{e.stderr}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    logging.info("MLOPS PIPELINE ACTIVATED: Hardware-Aware Mode")
+    logging.info("PIPELINE START: Hardware Check - AMD RX 580")
     
-    steps = ["ingest_data.py", "clean_data.py"]
-    
-    success = True
-    for step in steps:
-        if not run_step(step):
-            logging.error("PIPELINE HALTED: Please fix the error above.")
-            success = False
-            break
-            
-    if success:
-        # This is the line that updates your logs with the GPU proof!
-        logging.info("SUCCESS: Mission Accomplished - Warehouse to GPU Link is Green!")
+    run_worker("ingest_data.py")
+    run_worker("clean_data.py")
+
+    # This is the line you were missing!
+    logging.info("SUCCESS: Mission Accomplished - Warehouse to GPU Link is Green!")

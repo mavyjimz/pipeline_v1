@@ -1,59 +1,26 @@
 import pandas as pd
 import os
-import torch
-import torch_directml
 
-def transform_data():
-    # Pathing
-    input_path = os.path.join("..", "..", "input_data", "raw", "superstore_sales.csv")
-    output_path = os.path.join("..", "..", "input_data", "processed", "sales_summary.csv")
-
-    if not os.path.exists(input_path):
-        print(f"--- ERROR: {input_path} not found! ---")
-        return
-
-    # 1. HARDWARE PROOF: Initialize the AMD RX 580
-    device = torch_directml.device()
-    gpu_name = torch_directml.device_name(0)
-    print(f"\n[HARDWARE CHECK]: Engaging GPU -> {gpu_name}")
-
-    # 2. LOAD DATA
-    df = pd.read_csv(input_path)
-    df.columns = [str(c).strip() for c in df.columns]
+def clean_data():
+    # SETUP PATHS TO MLOPS ROOT (3 levels up from src)
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    MLOPS_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(SCRIPT_DIR)))
     
-    # 3. TENSOR COMPUTATION (Proof of GPU Processing)
-    # Moving data from RAM to VRAM
-    sales_tensor = torch.tensor(df['Sales'].values, dtype=torch.float32).to(device)
-    
-    print(f"--- GPU WORKLOAD: Processing {len(sales_tensor)} rows on {gpu_name} ---")
-    
-    # Mathematical operation performed on the GPU cores
-    profit_estimate_tensor = sales_tensor * 0.15
-    
-    # Moving results back to CPU for CSV saving
-    df['Profit'] = profit_estimate_tensor.cpu().numpy()
-    df['Profit_Margin'] = 0.15 
+    input_file = os.path.join(MLOPS_ROOT, 'data', 'input_data', 'raw_data.csv')
+    output_dir = os.path.join(MLOPS_ROOT, 'data', 'output_data')
+    output_file = os.path.join(output_dir, 'cleaned_data.csv')
 
-    # 4. FINAL AGGREGATION
-    if 'Category' in df.columns:
-        summary = df.groupby('Category').agg({
-            'Sales': 'sum', 
-            'Profit': 'sum', 
-            'Profit_Margin': 'mean'
-        }).reset_index()
+    os.makedirs(output_dir, exist_ok=True)
+
+    if os.path.exists(input_file):
+        df = pd.read_csv(input_file)
+        df['Date'] = pd.to_datetime(df['Date'])
+        df = df.sort_values(by='Date')
+        
+        df.to_csv(output_file, index=False)
+        print(f"SUCCESS: Data cleaned and saved to {output_file}")
     else:
-        summary = df[['Sales', 'Profit', 'Profit_Margin']].describe()
-
-   # 5. SAVE AND LOG SUCCESS
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    summary.to_csv(output_path, index=False)
-    
-    print("\n" + "*"*45)
-    print("   GPU PROOF OF WORK COMPLETE")
-    print("*"*45)
-    print(summary)
-    print("="*45)
-    print(f"Verified on Hardware: {gpu_name}\n")
+        print(f"ERROR: Could not find {input_file}")
 
 if __name__ == "__main__":
-    transform_data()
+    clean_data()
