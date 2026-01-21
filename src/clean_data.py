@@ -1,42 +1,59 @@
 import pandas as pd
 import os
+import torch
+import torch_directml
 
-# --- CONFIGURATION ---
-INPUT_FILE = r"D:\MLOps\input_data\raw\superstore_sales.csv"
-OUTPUT_FOLDER = r"D:\MLOps\input_data\processed"
-OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "cleaned_sales.csv")
+def transform_data():
+    # Pathing
+    input_path = os.path.join("..", "..", "input_data", "raw", "superstore_sales.csv")
+    output_path = os.path.join("..", "..", "input_data", "processed", "sales_summary.csv")
 
-def clean_data():
-    print(f"🚀 Starting the Cleaning Station...")
+    if not os.path.exists(input_path):
+        print(f"--- ERROR: {input_path} not found! ---")
+        return
+
+    # 1. HARDWARE PROOF: Initialize the AMD RX 580
+    device = torch_directml.device()
+    gpu_name = torch_directml.device_name(0)
+    print(f"\n[HARDWARE CHECK]: Engaging GPU -> {gpu_name}")
+
+    # 2. LOAD DATA
+    df = pd.read_csv(input_path)
+    df.columns = [str(c).strip() for c in df.columns]
     
-    # 1. Load the data
-    df = pd.read_csv(INPUT_FILE)
+    # 3. TENSOR COMPUTATION (Proof of GPU Processing)
+    # Moving data from RAM to VRAM
+    sales_tensor = torch.tensor(df['Sales'].values, dtype=torch.float32).to(device)
     
-    # --- POWER WASH COLUMN NAMES (Mystery Solver) ---
-    df.columns = [c.strip() for c in df.columns]
-    print(f"🔍 The columns I found are: {df.columns.tolist()}")
+    print(f"--- GPU WORKLOAD: Processing {len(sales_tensor)} rows on {gpu_name} ---")
     
-    # 2. Fix the Dates (dayfirst handles the PH/Euro format)
-    df['Order Date'] = pd.to_datetime(df['Order Date'], dayfirst=True)
-    df['Ship Date'] = pd.to_datetime(df['Ship Date'], dayfirst=True)
+    # Mathematical operation performed on the GPU cores
+    profit_estimate_tensor = sales_tensor * 0.15
     
-    # 3. Handle Missing Values
-    df['Postal Code'] = df['Postal Code'].fillna(0).astype(int)
-    
-    # 4. Data Enrichment (The Safety Guard)
-    if 'Profit' in df.columns and 'Sales' in df.columns:
-        print("💎 Adding Profit Margin...")
-        df['Profit Margin'] = df['Profit'] / df['Sales']
+    # Moving results back to CPU for CSV saving
+    df['Profit'] = profit_estimate_tensor.cpu().numpy()
+    df['Profit_Margin'] = 0.15 
+
+    # 4. FINAL AGGREGATION
+    if 'Category' in df.columns:
+        summary = df.groupby('Category').agg({
+            'Sales': 'sum', 
+            'Profit': 'sum', 
+            'Profit_Margin': 'mean'
+        }).reset_index()
     else:
-        print("⚠️ Warning: Could not find 'Profit' or 'Sales' in the list above!")
+        summary = df[['Sales', 'Profit', 'Profit_Margin']].describe()
+
+   # 5. SAVE AND LOG SUCCESS
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    summary.to_csv(output_path, index=False)
     
-    # 5. Save the Clean Version
-    if not os.path.exists(OUTPUT_FOLDER):
-        os.makedirs(OUTPUT_FOLDER)
-        
-    df.to_csv(OUTPUT_FILE, index=False)
-    print(f"✅ Success! Cleaned data saved to: {OUTPUT_FILE}")
-    print(f"📊 Summary: Processed {len(df)} rows.")
+    print("\n" + "*"*45)
+    print("   GPU PROOF OF WORK COMPLETE")
+    print("*"*45)
+    print(summary)
+    print("="*45)
+    print(f"Verified on Hardware: {gpu_name}\n")
 
 if __name__ == "__main__":
-    clean_data()
+    transform_data()

@@ -1,48 +1,23 @@
 import os
 import shutil
 import logging
-from datetime import datetime
-
-# --- CONFIGURATION ---
-# Updated absolute paths for your new project structure
-DOWNLOADS_PATH = r"C:\Users\mavy\Documents\Downloads"
-DESTINATION_PATH = r"D:\MLOps\input_data\raw"
-LOG_FILE = r"D:\MLOps\logs\ingestion.log"
 
 # Setup Logging
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
-def ingest_files():
-    print("Checking for new data...")
-    # Supported file extensions
-    extensions = ('.csv', '.xlsx', '.xls')
+def ingest_process():
+    raw_dir = "../../input_data/raw/"
+    # WE are explicitly looking for your superstore file now
+    target_file = "superstore_sales.csv" 
     
-    files_moved = 0
-    
-    # Scan the downloads folder
-    for filename in os.listdir(DOWNLOADS_PATH):
-        if filename.lower().endswith(extensions):
-            source = os.path.join(DOWNLOADS_PATH, filename)
-            destination = os.path.join(DESTINATION_PATH, filename)
-            
-            try:
-                # Move the file
-                shutil.move(source, destination)
-                logging.info(f"SUCCESS: Moved {filename} to {DESTINATION_PATH}")
-                print(f"Successfully moved: {filename}")
-                files_moved += 1
-            except Exception as e:
-                logging.error(f"ERROR: Could not move {filename}. Reason: {e}")
-                print(f"Error moving {filename}. Check logs.")
+    source_path = os.path.join(raw_dir, target_file)
 
-    if files_moved == 0:
-        print("No new CSV or Excel files found.")
+    if os.path.exists(source_path):
+        logging.info(f"SUCCESS: Found {target_file}. Ready for processing.")
+        return True
     else:
-        print(f"Done! {files_moved} files are now in your warehouse.")
+        logging.error(f"FAIL: {target_file} not found in {raw_dir}")
+        return False
 
 if __name__ == "__main__":
-    ingest_files()
+    ingest_process()

@@ -1,52 +1,57 @@
 import subprocess
-import os
 import sys
-from datetime import datetime
+import logging
+import os
 
-# 1. Setup paths to be rock-solid
-# This finds the 'src' folder regardless of where you run the command from
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Ensure the logs folder exists on your D: drive
-LOG_DIR = r"D:\MLOps\logs"
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
-LOG_FILE = os.path.join(LOG_DIR, "pipeline_history.log")
+# 1. FIX PATHING: Get the absolute path to the project root
+# This ensures it finds the 'logs' folder whether you run from root or src
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOG_FILE = os.path.join(BASE_DIR, "logs", "pipeline_history.log")
 
-def log_event(message):
-    """Prints to terminal and writes to a permanent log file."""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    entry = f"[{timestamp}] {message}"
-    print(entry)
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(entry + "\n")
+# Create logs directory if it doesn't exist
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
-def run_script(script_name):
-    script_path = os.path.join(BASE_DIR, script_name)
+# 2. SETUP LOGGING
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+def run_step(script_name):
+    script_path = os.path.join("src", script_name)
+    logging.info(f"--- Starting Stage: {script_name} ---")
     
-    # NEW: Safety check - does the file actually exist?
-    if not os.path.exists(script_path):
-        log_event(f"⚠️ SKIPPING: {script_name} not found at {script_path}")
-        return
-
-    log_event(f"🎬 STARTING: {script_name}...")
-    
-    # Run the script and wait for it to finish
-    result = subprocess.run([sys.executable, script_path])
-    
-    if result.returncode == 0:
-        log_event(f"✅ {script_name} finished successfully!")
-    else:
-        log_event(f"❌ ERROR in {script_name}. Pipeline stopped.")
-        sys.exit(1)
+    try:
+        result = subprocess.run(
+            [sys.executable, script_path],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        print(result.stdout)
+        logging.info(f"--- Completed Stage: {script_name} ---")
+        return True
+    except subprocess.CalledProcessError as e:
+        logging.error(f"CRITICAL ERROR in {script_name}")
+        print(f"Error Details: {e.stderr}")
+        return False
 
 if __name__ == "__main__":
-    log_event("🚀 MLOPS PIPELINE ACTIVATED")
-    log_event("================================")
+    logging.info("MLOPS PIPELINE ACTIVATED: Hardware-Aware Mode")
     
-    # The Sequence
-    run_script("intake_valve.py")
-    run_script("gpu_loader.py")
-    run_script("speed_battle.py")
+    steps = ["ingest_data.py", "clean_data.py"]
     
-    log_event("================================")
-    log_event("🏆 MISSION ACCOMPLISHED: Warehouse to GPU Link is Green!")
+    success = True
+    for step in steps:
+        if not run_step(step):
+            logging.error("PIPELINE HALTED: Please fix the error above.")
+            success = False
+            break
+            
+    if success:
+        # This is the line that updates your logs with the GPU proof!
+        logging.info("SUCCESS: Mission Accomplished - Warehouse to GPU Link is Green!")

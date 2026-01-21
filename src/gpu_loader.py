@@ -10,7 +10,7 @@ def load_data_to_vram():
     print(f"📡 Device Connected: {device}")
 
     # 2. Find the CSV in the Warehouse
-    file_path = r'D:\MLOps\input_data\raw\test_data.csv'
+    file_path = "../../input_data/raw/superstore_sales.csv"
     
     print(f"📂 Reading from Warehouse: {file_path}")
     df = pd.read_csv(file_path)
