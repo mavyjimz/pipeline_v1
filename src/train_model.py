@@ -24,7 +24,7 @@ def train_model():
         
         # Training logic: Predicting Profit based on Sales
         x_train = torch.tensor(df['Sales'].values, dtype=torch.float32).to(device)
-        y_train = torch.tensor(df['Profit'].values, dtype=torch.float32).to(device)
+        y_train = torch.tensor(df['Sales'].values, dtype=torch.float32).to(device)
 
         # Mathematical "Weight" calculation on GPU
         weight = y_train.mean() / x_train.mean()

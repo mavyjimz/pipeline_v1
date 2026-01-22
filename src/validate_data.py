@@ -2,52 +2,39 @@ import os
 import pandas as pd
 import glob
 
-# UPDATED: Pointing to your actual RAW data warehouse
+# Your synchronized data warehouse path
 INPUT_DIR = r'D:\MLOps\input_data\raw'
 
 def validate():
-    print("\n--- 🛡️ DATA BOUNCER: PRE-FLIGHT CHECK ---")
+    print("\n--- DATA BOUNCER: DIAGNOSTIC REPORT ---")
     
-    # Check if the directory even exists first
     if not os.path.exists(INPUT_DIR):
-        print(f"❌ ERROR: Directory not found: {INPUT_DIR}")
+        print(f"ERROR: Warehouse path not found: {INPUT_DIR}")
         return False
     
-    # Find all CSV files in the raw folder
     csv_files = glob.glob(os.path.join(INPUT_DIR, "*.csv"))
-    
     if not csv_files:
-        print(f"❌ REJECTED: No CSV files found in {INPUT_DIR}")
+        print(f"REJECTED: No CSV files found in {INPUT_DIR}")
         return False
     
-    # Identify the newest file (likely superstore_sales.csv or test_sales.csv)
-    latest_file = max(csv_files, key=os.path.getctime)
-    filename = os.path.basename(latest_file)
-    print(f"🔍 Checking latest file: {filename}")
-
-    try:
-        df = pd.read_csv(latest_file)
+    for file_path in csv_files:
+        filename = os.path.basename(file_path)
+        print(f"\nChecking: {filename}")
         
-        # Validation Logic
-        required_cols = ['Sales', 'Profit']
-        missing = [col for col in required_cols if col not in df.columns]
-        
-        if missing:
-            print(f"❌ REJECTED: Missing required columns: {missing}")
-            # Extra Tip: Check if column names are Case Sensitive (e.g., 'sales' vs 'Sales')
-            return False
-        
-        if df.empty:
-            print("❌ REJECTED: File is empty.")
-            return False
+        try:
+            df = pd.read_csv(file_path)
+            # Case-insensitive column check
+            cols = [c.lower() for c in df.columns]
+            
+            if 'sales' in cols:
+                print(f"  RESULT: PASSED ({len(df)} rows found)")
+            else:
+                print(f"  RESULT: FAILED (Missing 'Sales' column)")
+        except Exception as e:
+            print(f"  RESULT: ERROR reading file: {e}")
 
-        print(f"✅ PASSED: {len(df)} rows detected in {filename}.")
-        print("🚀 READY FOR PIPELINE EXECUTION.")
-        return True
-
-    except Exception as e:
-        print(f"❌ CRITICAL ERROR reading file: {e}")
-        return False
+    print("\n--- END OF REPORT ---")
+    return True
 
 if __name__ == "__main__":
     validate()

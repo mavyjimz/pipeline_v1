@@ -38,9 +38,14 @@ def run_worker(file_name):
 
 if __name__ == "__main__":
     logging.info("PIPELINE START: Hardware Check - AMD RX 580")
-    
-    run_worker("ingest_data.py")
-    run_worker("clean_data.py")
 
-    # This is the line you were missing!
-    logging.info("SUCCESS: Mission Accomplished - Warehouse to GPU Link is Green!")
+    # 1. INGESTION - Pull from Warehouse to Project
+    run_worker("ingest_data.py")
+    
+    # 2. CLEANING - RX 580 Data Processing
+    run_worker("clean_data.py")
+    
+    # 3. TRAINING - Generating the Model (.pkl file)
+    run_worker("train_model.py")
+
+    logging.info("SUCCESS: Mission Accomplished - Model is Born!")
