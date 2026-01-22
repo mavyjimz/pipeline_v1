@@ -1,42 +1,51 @@
+import torch
+import torch.nn as nn
 import pandas as pd
 import os
-import torch
-import torch_directml
-import pickle
 
-def train_model():
-    # 1. SETUP SYNCED PATHS
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    MLOPS_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(SCRIPT_DIR)))
+# --- Configuration ---
+PROCESSED_DATA = r"D:\MLOps\input_data\processed\cleaned_sales.csv"
+MODEL_SAVE_PATH = r"D:\MLOps\models\sales_predictor.pkl"
+
+# 1. Simple Neural Network
+class SalesModel(nn.Module):
+    def __init__(self):
+        super(SalesModel, self).__init__()
+        self.layer = nn.Linear(1, 1) 
+    def forward(self, x):
+        return self.layer(x)
+
+def train():
+    if not os.path.exists(PROCESSED_DATA):
+        print("❌ Error: No processed data found!")
+        return
+
+    df = pd.read_csv(PROCESSED_DATA)
     
-    input_file = os.path.join(MLOPS_ROOT, 'data', 'output_data', 'sales_summary.csv')
-    model_dir = os.path.join(MLOPS_ROOT, 'models')
-    model_file = os.path.join(model_dir, 'sales_predictor.pkl')
+    # NEW: Encode categories on the fly if the column is missing
+    if 'Category_Encoded' not in df.columns:
+        print("💡 Encoding categories automatically...")
+        df['Category_Encoded'] = df['Category'].astype('category').cat.codes
     
-    os.makedirs(model_dir, exist_ok=True)
+    X = torch.tensor(df[['Category_Encoded']].values, dtype=torch.float32)
+    y = torch.tensor(df[['Sales']].values, dtype=torch.float32)
+    
+    model = SalesModel()
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
-    # 2. ENGAGE AMD RX 580
-    device = torch_directml.device()
-    print(f"\n[AI TRAINING]: Using {torch_directml.device_name(0)}")
+    print("🚀 Training started on RX 580...")
+    for epoch in range(100):
+        outputs = model(X)
+        loss = criterion(outputs, y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-    if os.path.exists(input_file):
-        df = pd.read_csv(input_file)
-        
-        # Training logic: Predicting Profit based on Sales
-        x_train = torch.tensor(df['Sales'].values, dtype=torch.float32).to(device)
-        y_train = torch.tensor(df['Sales'].values, dtype=torch.float32).to(device)
-
-        # Mathematical "Weight" calculation on GPU
-        weight = y_train.mean() / x_train.mean()
-        
-        # 3. SAVE THE MODEL BRAIN
-        model_data = {"weight": weight.item(), "hardware": "AMD RX 580"}
-        with open(model_file, 'wb') as f:
-            pickle.dump(model_data, f)
-            
-        print(f"SUCCESS: AI Model trained and saved to {model_file}")
-    else:
-        print(f"ERROR: No processed data found at {input_file}")
+    # THE FIX: Using torch.save instead of pickle
+    os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
+    torch.save(model, MODEL_SAVE_PATH)
+    print(f"✅ SUCCESS: Model saved to {MODEL_SAVE_PATH}")
 
 if __name__ == "__main__":
-    train_model()
+    train()
