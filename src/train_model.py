@@ -11,7 +11,7 @@ MODEL_SAVE_PATH = r"D:\MLOps\models\sales_predictor.pkl"
 class SalesModel(nn.Module):
     def __init__(self):
         super(SalesModel, self).__init__()
-        self.layer = nn.Linear(1, 1) 
+        self.layer = nn.Linear(3, 1) 
     def forward(self, x):
         return self.layer(x)
 
@@ -26,8 +26,10 @@ def train():
     if 'Category_Encoded' not in df.columns:
         print("💡 Encoding categories automatically...")
         df['Category_Encoded'] = df['Category'].astype('category').cat.codes
+        df['Region_Encoded'] = df['Region'].astype('category').cat.codes
+        df['Segment_Encoded'] = df['Segment'].astype('category').cat.codes
     
-    X = torch.tensor(df[['Category_Encoded']].values, dtype=torch.float32)
+    X = torch.tensor(df[['Category_Encoded', 'Region_Encoded', 'Segment_Encoded']].values, dtype=torch.float32)
     y = torch.tensor(df[['Sales']].values, dtype=torch.float32)
     
     model = SalesModel()
