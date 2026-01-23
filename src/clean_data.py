@@ -20,7 +20,12 @@ def clean_data():
     print(f"--- 🏭 FACTORY START: Processing {len(df)} rows ---")
 
     # 2. THE TRANSFORMER (One-Hot Encoding)
-    # This turns 'Region' into 'Region_West', 'Region_East', etc.
+    print(f"DEBUG: Columns in DF before encoding: {df.columns.tolist()}")
+    
+    # Force pandas to see these as categories before encoding
+    for col in category_cols:
+        df[col] = df[col].astype(str).str.strip() 
+
     df_encoded = pd.get_dummies(df, columns=category_cols)
 
     # 3. THE NUMERIC SHIELD
