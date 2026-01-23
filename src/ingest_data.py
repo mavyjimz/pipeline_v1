@@ -1,26 +1,30 @@
-import pandas as pd
 import os
+import pandas as pd
 
-def ingest_data():
-    # SETUP PATHS TO MLOPS ROOT (3 levels up from src)
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    MLOPS_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(SCRIPT_DIR)))
+# 1. DEFINE ROOTS (The Standard Law)
+# This assumes the script is in D:/MLOps/projects/pipeline_v1/src
+# We want to go up to D:/MLOps
+MLOPS_ROOT = r"D:\MLOps"
+
+# 2. ALIGN WITH OFFICIAL HIERARCHY
+# We removed the 'data' middle-folder to stop the "Ghost" rebellion
+RAW_DATA_DIR = os.path.join(MLOPS_ROOT, 'input_data', 'raw')
+
+def ingest():
+    # Ensure the standard directory exists
+    os.makedirs(RAW_DATA_DIR, exist_ok=True)
     
-    DATA_DIR = os.path.join(MLOPS_ROOT, 'data', 'input_data')
-    os.makedirs(DATA_DIR, exist_ok=True)
+    # Path for our source file
+    target_path = os.path.join(RAW_DATA_DIR, 'raw_data.csv')
     
-    file_path = os.path.join(DATA_DIR, 'raw_data.csv')
+    print(f"INGESTION: Moving raw data to {target_path}...")
     
-    # Create sample data
-    data = {
-        'Date': pd.date_range(start='2025-01-01', periods=10, freq='D'),
-        'Sales': [100, 150, 120, 200, 180, 250, 220, 300, 280, 350],
-        'Temperature': [22, 24, 21, 25, 26, 28, 27, 30, 29, 31]
-    }
-    
-    df = pd.DataFrame(data)
-    df.to_csv(file_path, index=False)
-    print(f"SUCCESS: Data ingested to {file_path}")
+    # --- YOUR INGESTION LOGIC HERE ---
+    # For now, let's assume we are just checking if it's there or creating a placeholder
+    if not os.path.exists(target_path):
+        print("ALERT: No raw file found. Please place your raw CSV in 'input_data/raw/'")
+    else:
+        print("SUCCESS: Raw data is in the official warehouse.")
 
 if __name__ == "__main__":
-    ingest_data()
+    ingest()
