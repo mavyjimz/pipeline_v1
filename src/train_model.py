@@ -3,67 +3,57 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import os
-import sys
 
-# Force UTF-8 for the terminal to prevent UnicodeEncodeError
-if sys.stdout.encoding != 'utf-8':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-# 1. THE ARCHITECTURE
 class SalesPredictor(nn.Module):
-    def __init__(self):
+    def __init__(self, input_dim):
         super(SalesPredictor, self).__init__()
-        # Line 19/21 Logic
-        self.layer = nn.Linear(3, 1) 
+        self.fc1 = nn.Linear(input_dim, 16)
+        self.fc2 = nn.Linear(16, 8)
+        self.fc3 = nn.Linear(8, 1)
 
     def forward(self, x):
-        return self.layer(x)
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        return self.fc3(x)
 
 def train():
-    processed_path = r"D:\MLOps\input_data\processed\cleaned_sales.csv"
+    processed_path = r"D:\MLOps\input_data\processed\sales_summary.csv"
     
     if not os.path.exists(processed_path):
-        print("ERROR: Processed data not found.")
+        print(f"ERROR: No processed data at {processed_path}. Run clean_data.py first!")
         return
 
     df = pd.read_csv(processed_path)
 
-    # 2. ENCODING
-    df['Category_Encoded'] = df['Category'].astype('category').cat.codes
-    df['Region_Encoded'] = df['Region'].astype('category').cat.codes
-    df['Segment_Encoded'] = df['Segment'].astype('category').cat.codes
-
-    # 3. THE MATRIX
-    features = ['Category_Encoded', 'Region_Encoded', 'Segment_Encoded']
-    X = torch.tensor(df[features].values, dtype=torch.float32)
-    y = torch.tensor(df['Sales'].values, dtype=torch.float32).view(-1, 1)
-
-    # 4. TRAINING EXECUTION
-    model = SalesPredictor()
-    criterion = nn.MSELoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
-
-    print("STARTING MULTI-FEATURE TRAINING...")
-    try:
-        # Line 63 Logic
-        for epoch in range(100):
-            optimizer.zero_grad()
-            outputs = model(X) 
-            loss = criterion(outputs, y)
-            loss.backward()
-            optimizer.step()
-            
-            if (epoch + 1) % 10 == 0:
-                print(f"Epoch [{epoch+1}/100], Loss: {loss.item():.4f}")
-
-        # 5. THE EXPORT
-        os.makedirs("models", exist_ok=True)
-        torch.save(model, "models/sales_predictor.pkl")
-        print("SUCCESS: Multi-feature model saved.")
+    # LESSON 15: One-Hot Encoding the required columns
+    required_cols = ['Category', 'Region', 'Segment']
+    df_encoded = pd.get_dummies(df, columns=required_cols)
     
-    except Exception as e:
-        print(f"CRASH DURING TRAINING: {e}")
+    # Filter for numbers and bools only (Protect RX 580)
+    X_df = df_encoded.select_dtypes(include=['number', 'bool']).copy()
+    if 'Sales' in X_df.columns:
+        X_df = X_df.drop(columns=['Sales'])
+
+    X = torch.tensor(X_df.values.astype(float), dtype=torch.float32)
+    y = torch.tensor(df['Sales'].values.astype(float), dtype=torch.float32).view(-1, 1)
+
+    model = SalesPredictor(X.shape[1])
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    criterion = nn.MSELoss()
+
+    print(f"\nSTARTING TRAINING: Inputs = {X.shape[1]} features")
+    for epoch in range(100):
+        outputs = model(X)
+        loss = criterion(outputs, y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        if (epoch+1) % 20 == 0:
+            print(f"Epoch [{epoch+1}/100], Loss: {loss.item():.4f}")
+
+    os.makedirs("models", exist_ok=True)
+    torch.save(model.state_dict(), "models/sales_model.pth")
+    print("\nMISSION ACCOMPLISHED: Model is Born!")
 
 if __name__ == "__main__":
     train()
