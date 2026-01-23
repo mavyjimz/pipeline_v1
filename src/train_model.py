@@ -1,88 +1,77 @@
-import torch
-import torch.nn as nn
 import pandas as pd
 import numpy as np
-import os
+import torch
+import torch.nn as nn
 from sklearn.metrics import mean_squared_error
+import os
 
-# --- 1. SETTINGS & ABSOLUTE PATH LAW ---
-MLOPS_ROOT = r"D:\MLOps"
-# Pointing to the PROCESSED data folder
-DATA_PATH = os.path.join(MLOPS_ROOT, "input_data", "processed", "sales_summary.csv")
-MODEL_DIR = os.path.join(MLOPS_ROOT, "models")
-os.makedirs(MODEL_DIR, exist_ok=True)
+# 1. Setup Paths
+DATA_PATH = r"D:\MLOps\input_data\processed\sales_summary.csv"
+MODEL_SAVE_PATH = r"D:\MLOps\models\sales_model.pth"
 
-def train_pipeline():
-    # --- 2. DATA LOADING & PROTECTIVE FILTERING ---
+def train():
     if not os.path.exists(DATA_PATH):
-        print(f"ERROR: Data not found at {DATA_PATH}")
+        print(f"Error: Could not find {DATA_PATH}")
         return
 
-    print(f"Loading data from: {DATA_PATH}")
+    # 2. Load Data
     df = pd.read_csv(DATA_PATH)
     
-    # One-Hot Encoding for categories
-    df = pd.get_dummies(df, columns=['Category', 'Region', 'Segment'], dtype=float)
+    # SPIDER-SENSE SHIELD: Only use numeric data for the RX 580
+    df_numeric = df.select_dtypes(include=[np.number])
     
-    # Identify target and drop non-numeric/unnecessary columns
-    y = df['Sales']
+    X = df_numeric.drop(columns=['Sales']).values.astype(np.float32)
+    y = df_numeric['Sales'].values.reshape(-1, 1).astype(np.float32)
     
-    # THE SHIELD: Keep ONLY numeric columns for X
-    # This automatically ignores 'Order Date', 'Customer Name', 'City', etc.
-    X = df.drop(columns=['Sales'], errors='ignore').select_dtypes(include=[np.number])
-    
-    print(f"--- DATA CHECK ---")
-    print(f"Features found: {list(X.columns)}")
-    print(f"Number of features: {X.shape[1]}")
+    feature_names = df_numeric.drop(columns=['Sales']).columns.tolist()
 
-    # Convert to Tensors (float32 for RX 580 compatibility)
-    X_tensor = torch.tensor(X.values, dtype=torch.float32)
-    y_tensor = torch.tensor(y.values, dtype=torch.float32).view(-1, 1)
-
-    # --- 3. THE NEURAL NETWORK ---
-    input_dim = X_tensor.shape[1]
-    model = nn.Sequential(
-        nn.Linear(input_dim, 64),
-        nn.ReLU(),
-        nn.Linear(64, 32),
-        nn.ReLU(),
-        nn.Linear(32, 1)
-    )
-
+    # 3. Model Definition (Linear Regression in PyTorch)
+    input_dim = X.shape[1]
+    model = nn.Linear(input_dim, 1)
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
-    # --- 4. TRAINING LOOP ---
-    print(f"\nStarting Training on {input_dim} features...")
+    # 4. Training Loop
+    print(f"--- STARTING LESSON 17 TRAINING ({len(feature_names)} Features) ---")
     for epoch in range(100):
-        outputs = model(X_tensor)
-        loss = criterion(outputs, y_tensor)
-        
+        inputs = torch.from_numpy(X)
+        targets = torch.from_numpy(y)
+
+        outputs = model(inputs)
+        loss = criterion(outputs, targets)
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        
-        if (epoch+1) % 20 == 0:
-            print(f"Epoch [{epoch+1}/100], Loss: {loss.item():.4f}")
 
-    # --- 5. LESSON 16: EVALUATION METRICS ---
+        if (epoch + 1) % 20 == 0:
+            print(f'Epoch [{epoch+1}/100], Loss: {loss.item():.4f}')
+
+    # 5. Evaluation Metrics
     model.eval()
     with torch.no_grad():
-        predictions = model(X_tensor)
-        preds_np = predictions.numpy()
-        actuals_np = y_tensor.numpy()
-        
-        mse = mean_squared_error(actuals_np, preds_np)
+        predictions = model(torch.from_numpy(X)).numpy()
+        mse = mean_squared_error(y, predictions)
         rmse = np.sqrt(mse)
-        
-    print("\n---  EVALUATION REPORT ---")
-    print(f"Final MSE: {mse:.4f}")
-    print(f"RMSE (Avg Error): ${rmse:.2f}")
 
-    # --- 6. SAVE WEIGHTS ---
-    save_path = os.path.join(MODEL_DIR, "sales_model.pth")
-    torch.save(model.state_dict(), save_path)
-    print(f"\n Model saved to: {save_path}")
+    print("\n--- EVALUATION REPORT ---")
+    print(f"Mean Squared Error (MSE): {mse:.2f}")
+    print(f"Root Mean Squared Error (RMSE): ${rmse:.2f}")
+
+    # 6. FEATURE IMPORTANCE (The Lesson 17 Upgrade)
+    print("\n--- FEATURE IMPORTANCE (Weights) ---")
+    weights = model.weight.data.numpy().flatten()
+    importance_df = pd.DataFrame({
+        'Feature': feature_names,
+        'Weight': weights
+    }).sort_values(by='Weight', ascending=False)
+    
+    print(importance_df.to_string(index=False))
+
+    # 7. Save Model
+    os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
+    torch.save(model.state_dict(), MODEL_SAVE_PATH)
+    print(f"\nSUCCESS: Model saved to {MODEL_SAVE_PATH}")
 
 if __name__ == "__main__":
-    train_pipeline()
+    train()
