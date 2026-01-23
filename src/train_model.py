@@ -5,7 +5,7 @@ import torch.nn as nn
 from sklearn.metrics import mean_squared_error
 import os
 
-# 1. Setup Paths
+# 1. Setup Paths (D: Drive Warehouse)
 DATA_PATH = r"D:\MLOps\input_data\processed\sales_summary.csv"
 MODEL_SAVE_PATH = r"D:\MLOps\models\sales_model.pth"
 
@@ -17,15 +17,20 @@ def train():
     # 2. Load Data
     df = pd.read_csv(DATA_PATH)
     
-    # SPIDER-SENSE SHIELD: Only use numeric data for the RX 580
+    # --- THE DOUBLE-SHIELD LOGIC ---
+    # Shield 1: Keep only numeric columns (Protects RX 580 from strings)
     df_numeric = df.select_dtypes(include=[np.number])
     
+    # Shield 2: Drop any rows with empty cells (Protects Math from NaNs)
+    df_numeric = df_numeric.dropna()
+    
+    # Prepare features (X) and target (y)
     X = df_numeric.drop(columns=['Sales']).values.astype(np.float32)
     y = df_numeric['Sales'].values.reshape(-1, 1).astype(np.float32)
     
     feature_names = df_numeric.drop(columns=['Sales']).columns.tolist()
 
-    # 3. Model Definition (Linear Regression in PyTorch)
+    # 3. Model Definition
     input_dim = X.shape[1]
     model = nn.Linear(input_dim, 1)
     criterion = nn.MSELoss()
@@ -58,7 +63,7 @@ def train():
     print(f"Mean Squared Error (MSE): {mse:.2f}")
     print(f"Root Mean Squared Error (RMSE): ${rmse:.2f}")
 
-    # 6. FEATURE IMPORTANCE (The Lesson 17 Upgrade)
+    # 6. FEATURE IMPORTANCE (Lesson 17 Upgrade)
     print("\n--- FEATURE IMPORTANCE (Weights) ---")
     weights = model.weight.data.numpy().flatten()
     importance_df = pd.DataFrame({
