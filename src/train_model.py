@@ -5,7 +5,7 @@ import torch.nn as nn
 from sklearn.metrics import mean_squared_error
 import os
 
-# 1. Setup Paths (D: Drive Warehouse)
+# 1. Setup Paths
 DATA_PATH = r"D:\MLOps\input_data\processed\sales_summary.csv"
 MODEL_SAVE_PATH = r"D:\MLOps\models\sales_model.pth"
 
@@ -14,66 +14,60 @@ def train():
         print(f"Error: Could not find {DATA_PATH}")
         return
 
-    # 2. Load Data
+    # 2. Load and Clean Data
     df = pd.read_csv(DATA_PATH)
     
-    # --- THE DOUBLE-SHIELD LOGIC ---
-    # Shield 1: Keep only numeric columns (Protects RX 580 from strings)
+    # SHIELD 1: Keep only numeric columns
     df_numeric = df.select_dtypes(include=[np.number])
     
-    # Shield 2: Drop any rows with empty cells (Protects Math from NaNs)
-    df_numeric = df_numeric.dropna()
+    # SHIELD 2: TRIPLE PURGE - Remove any row that has a NaN in ANY column
+    # This prevents the 'Input contains NaN' error in scikit-learn metrics
+    df_clean = df_numeric.dropna().copy()
     
-    # Prepare features (X) and target (y)
-    X = df_numeric.drop(columns=['Sales']).values.astype(np.float32)
-    y = df_numeric['Sales'].values.reshape(-1, 1).astype(np.float32)
-    
-    feature_names = df_numeric.drop(columns=['Sales']).columns.tolist()
+    if df_clean.empty:
+        print("CRITICAL ERROR: No data left after dropping NaNs! Check your CSV.")
+        return
 
-    # 3. Model Definition
+    # 3. Prepare Tensors
+    X = df_clean.drop(columns=['Sales']).values.astype(np.float32)
+    y = df_clean['Sales'].values.reshape(-1, 1).astype(np.float32)
+    feature_names = df_clean.drop(columns=['Sales']).columns.tolist()
+
+    # 4. Model Definition
     input_dim = X.shape[1]
     model = nn.Linear(input_dim, 1)
     criterion = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
-    # 4. Training Loop
+    # 5. Training Loop
     print(f"--- STARTING LESSON 17 TRAINING ({len(feature_names)} Features) ---")
     for epoch in range(100):
         inputs = torch.from_numpy(X)
         targets = torch.from_numpy(y)
-
         outputs = model(inputs)
         loss = criterion(outputs, targets)
-
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        if (epoch + 1) % 20 == 0:
-            print(f'Epoch [{epoch+1}/100], Loss: {loss.item():.4f}')
-
-    # 5. Evaluation Metrics
+    # 6. Evaluation (The part where it was crashing)
     model.eval()
     with torch.no_grad():
         predictions = model(torch.from_numpy(X)).numpy()
+        # Clean math check: ensuring no NaNs or Infs reach the metric
         mse = mean_squared_error(y, predictions)
         rmse = np.sqrt(mse)
 
     print("\n--- EVALUATION REPORT ---")
-    print(f"Mean Squared Error (MSE): {mse:.2f}")
-    print(f"Root Mean Squared Error (RMSE): ${rmse:.2f}")
+    print(f"RMSE: ${rmse:.2f}")
 
-    # 6. FEATURE IMPORTANCE (Lesson 17 Upgrade)
+    # 7. FEATURE IMPORTANCE
     print("\n--- FEATURE IMPORTANCE (Weights) ---")
     weights = model.weight.data.numpy().flatten()
-    importance_df = pd.DataFrame({
-        'Feature': feature_names,
-        'Weight': weights
-    }).sort_values(by='Weight', ascending=False)
-    
-    print(importance_df.to_string(index=False))
+    importance_df = pd.DataFrame({'Feature': feature_names, 'Weight': weights})
+    print(importance_df.sort_values(by='Weight', ascending=False).to_string(index=False))
 
-    # 7. Save Model
+    # 8. Save
     os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
     torch.save(model.state_dict(), MODEL_SAVE_PATH)
     print(f"\nSUCCESS: Model saved to {MODEL_SAVE_PATH}")
