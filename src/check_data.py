@@ -1,35 +1,25 @@
 import pandas as pd
-import argparse
 import os
 
-def main():
-    parser = argparse.ArgumentParser(description="MLOps Data Scout - Column Auditor")
-    parser.add_argument("--file", type=str, required=True, help="Path to the CSV file")
-    args = parser.parse_args()
+def scout_raw_data():
+    # Use the source you confirmed: superstore_sales.csv
+    file_path = r"D:\MLOps\input_data\raw\superstore_sales.csv"
+    
+    if not os.path.exists(file_path):
+        print(f"Error: {file_path} not found.")
+        return
 
-    if os.path.exists(args.file):
-        df = pd.read_csv(args.file)
-        
-        print(f"\n✅ SUCCESS: Loaded {args.file}")
-        print(f"📊 SHAPE: {df.shape[0]} rows and {df.shape[1]} columns")
-        
-        # --- THE COLUMN AUDIT ---
-        print("\n🔍 FULL COLUMN LIST:")
-        all_columns = df.columns.tolist()
-        for i, col in enumerate(all_columns, 1):
-            print(f"{i}. {col}")
+    df = pd.read_csv(file_path)
 
-        # --- THE SAFETY CHECK ---
-        target_cols = ['Category', 'Sales'] # Add 'Profit' here if you want to test
-        print("\n🛡️ SAFETY CHECK:")
-        for col in target_cols:
-            if col in all_columns:
-                print(f"✅ FOUND: '{col}' is present.")
-            else:
-                print(f"❌ MISSING: '{col}' NOT FOUND! Pipeline will crash.")
-
-    else:
-        print(f"❌ ERROR: File not found at {args.file}")
+    print("\n--- 🛡️ LEAD'S RAW DATA RECON ---")
+    print(f"Total Rows: {len(df)}")
+    print(f"Total Columns Found: {len(df.columns)}")
+    
+    print("\n--- 📑 ALL DETECTED HEADERS ---")
+    print(df.columns.tolist())
+    
+    print("\n--- 📊 DATA TYPES (The 'Hidden' Categories) ---")
+    print(df.dtypes)
 
 if __name__ == "__main__":
-    main()
+    scout_raw_data()
