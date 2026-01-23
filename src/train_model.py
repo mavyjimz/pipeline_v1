@@ -75,14 +75,14 @@ def train_pipeline():
         mse = mean_squared_error(actuals_np, preds_np)
         rmse = np.sqrt(mse)
         
-    print("\n--- 📊 EVALUATION REPORT ---")
+    print("\n---  EVALUATION REPORT ---")
     print(f"Final MSE: {mse:.4f}")
     print(f"RMSE (Avg Error): ${rmse:.2f}")
 
     # --- 6. SAVE WEIGHTS ---
     save_path = os.path.join(MODEL_DIR, "sales_model.pth")
     torch.save(model.state_dict(), save_path)
-    print(f"\n✅ Model saved to: {save_path}")
+    print(f"\n Model saved to: {save_path}")
 
 if __name__ == "__main__":
     train_pipeline()
