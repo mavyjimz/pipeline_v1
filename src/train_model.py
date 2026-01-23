@@ -1,82 +1,62 @@
 import pandas as pd
 import numpy as np
-import torch
-import torch.nn as nn
-from sklearn.metrics import mean_squared_error
 import os
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 
-# 1. Setup Paths
-DATA_PATH = r"D:\MLOps\input_data\processed\sales_summary.csv"
-MODEL_SAVE_PATH = r"D:\MLOps\models\sales_model.pth"
-
-def train():
-    if not os.path.exists(DATA_PATH):
-        print(f"Error: Could not find {DATA_PATH}")
+def train_model():
+    MLOPS_ROOT = r"D:\MLOps"
+    input_file = os.path.join(MLOPS_ROOT, 'input_data', 'processed', 'sales_summary.csv')
+    
+    if not os.path.exists(input_file):
+        print(f"ERROR: No processed data found at {input_file}")
         return
 
-    # 2. Load and Clean Data
-    df = pd.read_csv(DATA_PATH)
-    
-    # SHIELD 1: Keep only numeric columns
+    df = pd.read_csv(input_file)
+
+    # 1. THE BOUNCER: Only allow numbers
     df_numeric = df.select_dtypes(include=[np.number])
     
-    # SHIELD 2: TRIPLE PURGE - Remove any row that has a NaN in ANY column
-    # This prevents the 'Input contains NaN' error in scikit-learn metrics
+    # 2. THE JANITOR: Remove any remaining NaNs
     df_clean = df_numeric.dropna().copy()
-    
+
     if df_clean.empty:
-        print("CRITICAL ERROR: No data left after dropping NaNs! Check your CSV.")
+        print("ERROR: No data left after cleaning!")
         return
 
-    # 3. Prepare Tensors
+    # 3. THE NORMALIZATION SHIELD: Force everything between 0 and 1
+    # This prevents the 'NaN' weights you were seeing!
+    for col in df_clean.columns:
+        c_min = df_clean[col].min()
+        c_max = df_clean[col].max()
+        if c_max > c_min:
+            df_clean[col] = (df_clean[col] - c_min) / (c_max - c_min)
+        else:
+            df_clean[col] = 0.0
+
+    # Define X (features) and y (target)
     X = df_clean.drop(columns=['Sales']).values.astype(np.float32)
     y = df_clean['Sales'].values.reshape(-1, 1).astype(np.float32)
-    feature_names = df_clean.drop(columns=['Sales']).columns.tolist()
 
-    # 4. Model Definition
-    input_dim = X.shape[1]
-    model = nn.Linear(input_dim, 1)
-    criterion = nn.MSELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    # 4. THE TRAINING ENGINE
+    model = LinearRegression()
+    model.fit(X, y)
 
-    # 5. Training Loop
-    print(f"--- STARTING LESSON 17 TRAINING ({len(feature_names)} Features) ---")
-    for epoch in range(100):
-        inputs = torch.from_numpy(X)
-        targets = torch.from_numpy(y)
-        outputs = model(inputs)
-        loss = criterion(outputs, targets)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+    # Calculate RMSE
+    predictions = model.predict(X)
+    rmse = np.sqrt(mean_squared_error(y, predictions))
 
-    # 6. Evaluation (THE INDESTRUCTIBLE VERSION)
-    model.eval()
-    with torch.no_grad():
-        # Get raw predictions
-        raw_predictions = model(torch.from_numpy(X)).numpy()
-        
-        # FINAL SAFETY CHECK: Replace any accidental NaNs/Infs with 0.0
-        # Sometimes SGD can 'explode' and create Infs if the data is messy
-        predictions = np.nan_to_num(raw_predictions)
-        clean_y = np.nan_to_num(y)
-
-        mse = mean_squared_error(clean_y, predictions)
-        rmse = np.sqrt(mse)
-
-    print("\n--- EVALUATION REPORT ---")
+    # REPORTING
+    print(f"\n--- EVALUATION REPORT (LESSON 18) ---")
+    print(f"Features Detected: {len(df_clean.columns) - 1}")
     print(f"RMSE: ${rmse:.2f}")
-
-    # 7. FEATURE IMPORTANCE
-    print("\n--- FEATURE IMPORTANCE (Weights) ---")
-    weights = model.weight.data.numpy().flatten()
-    importance_df = pd.DataFrame({'Feature': feature_names, 'Weight': weights})
-    print(importance_df.sort_values(by='Weight', ascending=False).to_string(index=False))
-
-    # 8. Save
-    os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
-    torch.save(model.state_dict(), MODEL_SAVE_PATH)
-    print(f"\nSUCCESS: Model saved to {MODEL_SAVE_PATH}")
+    
+    # Check weights to ensure they aren't NaN
+    weights = np.nan_to_num(model.coef_[0])
+    feature_names = df_clean.drop(columns=['Sales']).columns
+    print("\n--- FEATURE WEIGHTS ---")
+    for name, weight in zip(feature_names, weights):
+        print(f"{name}: {weight:.4f}")
 
 if __name__ == "__main__":
-    train()
+    train_model()
