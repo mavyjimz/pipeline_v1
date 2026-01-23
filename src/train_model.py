@@ -1,70 +1,82 @@
-import pandas as pd
 import torch
 import torch.nn as nn
-import torch.optim as optim
+import pandas as pd
+import numpy as np
 import os
+from sklearn.metrics import mean_squared_error
 
-# 1. THE BRAIN
-class SalesPredictor(nn.Module):
-    def __init__(self, input_dim):
-        super(SalesPredictor, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 16)
-        self.fc2 = nn.Linear(16, 8)
-        self.fc3 = nn.Linear(8, 1)
+# --- 1. SETTINGS & ABSOLUTE PATH LAW ---
+MLOPS_ROOT = r"D:\MLOps"
+DATA_PATH = os.path.join(MLOPS_ROOT, "input_data", "sales_data.csv")
+MODEL_DIR = os.path.join(MLOPS_ROOT, "models")
+os.makedirs(MODEL_DIR, exist_ok=True)
 
-    def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return self.fc3(x)
-
-def train():
-    # --- THE LAW: ABSOLUTE GPS PATHS ---
-    MLOPS_ROOT = r"D:\MLOps"
-    PROCESSED_DATA_PATH = os.path.join(MLOPS_ROOT, "input_data", "processed", "sales_summary.csv")
-    MODEL_WAREHOUSE = os.path.join(MLOPS_ROOT, "models")
-    
-    if not os.path.exists(PROCESSED_DATA_PATH):
-        print(f"ERROR: No processed data at {PROCESSED_DATA_PATH}. Run clean_data.py first!")
+def train_pipeline():
+    # --- 2. DATA LOADING & ENCODING ---
+    if not os.path.exists(DATA_PATH):
+        print(f"ERROR: Data not found at {DATA_PATH}")
         return
 
-    # 2. LOAD DATA
-    df = pd.read_csv(PROCESSED_DATA_PATH)
-
-    # 3. LESSON 15: ONE-HOT ENCODING
-    required_cols = ['Category', 'Region', 'Segment']
-    df_encoded = pd.get_dummies(df, columns=required_cols)
+    df = pd.read_csv(DATA_PATH)
     
-    # 4. TITANIUM FILTER (Protecting RX 580)
-    X_df = df_encoded.select_dtypes(include=['number', 'bool']).copy()
-    if 'Sales' in X_df.columns:
-        X_df = X_df.drop(columns=['Sales'])
+    # One-Hot Encoding (Categorical to Numerical)
+    df = pd.get_dummies(df, columns=['Category', 'Region', 'Segment'], dtype=float)
+    
+    # Separate Features (X) and Target (y)
+    X = df.drop(columns=['Sales', 'Order Date', 'Customer Name'], errors='ignore')
+    y = df['Sales']
 
-    # Convert to Float32 Tensors
-    X = torch.tensor(X_df.values.astype(float), dtype=torch.float32)
-    y = torch.tensor(df['Sales'].values.astype(float), dtype=torch.float32).view(-1, 1)
+    # Convert to Tensors (float32 for RX 580 compatibility)
+    X_tensor = torch.tensor(X.values, dtype=torch.float32)
+    y_tensor = torch.tensor(y.values, dtype=torch.float32).view(-1, 1)
 
-    # 5. INITIALIZE & TRAIN
-    input_dim = X.shape[1]
-    model = SalesPredictor(input_dim)
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    # --- 3. THE NEURAL NETWORK ---
+    input_dim = X_tensor.shape[1]
+    model = nn.Sequential(
+        nn.Linear(input_dim, 64),
+        nn.ReLU(),
+        nn.Linear(64, 32),
+        nn.ReLU(),
+        nn.Linear(32, 1)
+    )
+
     criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-    print(f"\nSTARTING TRAINING: Inputs = {input_dim} features")
+    # --- 4. TRAINING LOOP ---
+    print(f"Starting Training on {input_dim} features...")
     for epoch in range(100):
-        outputs = model(X)
-        loss = criterion(outputs, y)
+        # Forward pass
+        outputs = model(X_tensor)
+        loss = criterion(outputs, y_tensor)
+        
+        # Backward and optimize
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        
         if (epoch+1) % 20 == 0:
             print(f"Epoch [{epoch+1}/100], Loss: {loss.item():.4f}")
 
-    # 6. BANISHING THE GHOST (Absolute Path Saving)
-    os.makedirs(MODEL_WAREHOUSE, exist_ok=True)
-    save_path = os.path.join(MODEL_WAREHOUSE, "sales_model.pth")
+    # --- 5. LESSON 16: EVALUATION METRICS ---
+    model.eval()
+    with torch.no_grad():
+        predictions = model(X_tensor)
+        # Convert back to numpy for Sklearn metrics
+        preds_np = predictions.numpy()
+        actuals_np = y_tensor.numpy()
+        
+        mse = mean_squared_error(actuals_np, preds_np)
+        rmse = np.sqrt(mse)
+        
+    print("\n--- 📊 EVALUATION REPORT ---")
+    print(f"Final MSE: {mse:.4f}")
+    print(f"RMSE (Avg Error): ${rmse:.2f}")
+
+    # --- 6. SAVE WEIGHTS ---
+    save_path = os.path.join(MODEL_DIR, "sales_model.pth")
     torch.save(model.state_dict(), save_path)
-    
-    print(f"\nMISSION ACCOMPLISHED: Model saved to {save_path}")
+    print(f"\n✅ Model saved to: {save_path}")
 
 if __name__ == "__main__":
-    train()
+    train_pipeline()
