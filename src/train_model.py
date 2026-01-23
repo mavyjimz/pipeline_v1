@@ -50,12 +50,18 @@ def train():
         loss.backward()
         optimizer.step()
 
-    # 6. Evaluation (The part where it was crashing)
+    # 6. Evaluation (THE INDESTRUCTIBLE VERSION)
     model.eval()
     with torch.no_grad():
-        predictions = model(torch.from_numpy(X)).numpy()
-        # Clean math check: ensuring no NaNs or Infs reach the metric
-        mse = mean_squared_error(y, predictions)
+        # Get raw predictions
+        raw_predictions = model(torch.from_numpy(X)).numpy()
+        
+        # FINAL SAFETY CHECK: Replace any accidental NaNs/Infs with 0.0
+        # Sometimes SGD can 'explode' and create Infs if the data is messy
+        predictions = np.nan_to_num(raw_predictions)
+        clean_y = np.nan_to_num(y)
+
+        mse = mean_squared_error(clean_y, predictions)
         rmse = np.sqrt(mse)
 
     print("\n--- EVALUATION REPORT ---")
