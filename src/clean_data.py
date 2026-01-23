@@ -3,34 +3,37 @@ import numpy as np
 import os
 
 def clean_data():
-    MLOPS_ROOT = r"D:\MLOps"
-    input_file = os.path.join(MLOPS_ROOT, 'input_data', 'raw', 'raw_data.csv')
-    output_file = os.path.join(MLOPS_ROOT, 'input_data', 'processed', 'sales_summary.csv')
+    raw_path = r"D:\MLOps\input_data\raw\superstore_sales.csv"
+    processed_path = r"D:\MLOps\input_data\processed\sales_summary.csv"
     
-    if not os.path.exists(input_file):
-        print(f"ERROR: No raw data at {input_file}")
+    if not os.path.exists(raw_path):
+        print(f"Error: {raw_path} not found.")
         return
 
-    df = pd.read_csv(input_file)
+    df = pd.read_csv(raw_path)
 
-    # 1. FORCE NUMERIC: Convert everything possible to a number
-    # This catches 'Sales', 'Temperature', and any others that exist
-    for col in df.columns:
-        # If the column name sounds like math, force it to be math
-        if col in ['Sales', 'Temperature', 'Quantity', 'Discount', 'Profit']:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
+    # 1. THE SCOUTED TARGETS (Match capitalization exactly!)
+    # We found these in image_5efc19.png
+    category_cols = ['Segment', 'Region', 'Category']
+    numeric_cols = ['Sales', 'Temperature']
 
-    # 2. DATE HANDLING
-    if 'Date' in df.columns:
-        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-        df = df.sort_values(by='Date')
+    print(f"--- 🏭 FACTORY START: Processing {len(df)} rows ---")
 
-    # 3. THE SAFETY FILTER: Drop rows that became NaNs during conversion
-    df = df.dropna(subset=['Sales']) 
+    # 2. THE TRANSFORMER (One-Hot Encoding)
+    # This turns 'Region' into 'Region_West', 'Region_East', etc.
+    df_encoded = pd.get_dummies(df, columns=category_cols)
 
-    df.to_csv(output_file, index=False)
-    print(f"SUCCESS: Factory output secured at {output_file}")
-    print(f"Detected Numeric Columns: {df.select_dtypes(include=[np.number]).columns.tolist()}")
+    # 3. THE NUMERIC SHIELD
+    # Keep only Sales, Temp, and our brand new Encoded columns
+    df_final = df_encoded.select_dtypes(include=[np.number]).dropna()
+
+    # 4. EXPORT
+    df_final.to_csv(processed_path, index=False)
+    
+    print(f"SUCCESS: Factory output secured at {processed_path}")
+    # (-1 to exclude the 'Sales' target from the feature count)
+    print(f"New Feature Count: {len(df_final.columns) - 1}")
+    print(f"Detected Columns: {df_final.columns.tolist()[:10]}... (Total: {len(df_final.columns)})")
 
 if __name__ == "__main__":
     clean_data()
