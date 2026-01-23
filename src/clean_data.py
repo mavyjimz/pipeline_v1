@@ -20,13 +20,11 @@ def clean_data():
     print(f"--- 🏭 FACTORY START: Processing {len(df)} rows ---")
 
     # 2. THE TRANSFORMER (One-Hot Encoding)
-    print(f"DEBUG: Columns in DF before encoding: {df.columns.tolist()}")
-    
-    # Force pandas to see these as categories before encoding
-    for col in category_cols:
-        df[col] = df[col].astype(str).str.strip() 
+    # This line forces pandas to treat them as categories
+    df_encoded = pd.get_dummies(df, columns=category_cols, dummy_na=False)
 
-    df_encoded = pd.get_dummies(df, columns=category_cols)
+    # DEBUG: Let's see if the expansion actually happened
+    print(f"DEBUG: Total columns after expansion: {len(df_encoded.columns)}")
 
     # 3. THE NUMERIC SHIELD
     # Keep only Sales, Temp, and our brand new Encoded columns
