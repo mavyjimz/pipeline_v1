@@ -7,7 +7,7 @@ from sklearn.metrics import mean_squared_error
 
 # --- 1. SETTINGS & ABSOLUTE PATH LAW ---
 MLOPS_ROOT = r"D:\MLOps"
-DATA_PATH = os.path.join(MLOPS_ROOT, "input_data", "sales_data.csv")
+DATA_PATH = os.path.join(MLOPS_ROOT, "input_data", "processed", "sales_summary.csv")
 MODEL_DIR = os.path.join(MLOPS_ROOT, "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
