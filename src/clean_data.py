@@ -17,7 +17,7 @@ def clean_data():
     category_cols = ['Segment', 'Region', 'Category']
     numeric_cols = ['Sales', 'Temperature']
 
-    print(f"--- 🏭 FACTORY START: Processing {len(df)} rows ---")
+    print(f"--- [FACTORY START]: Processing {len(df)} rows ---")
 
     # 2. THE TRANSFORMER (One-Hot Encoding)
     # This line forces pandas to treat them as categories
