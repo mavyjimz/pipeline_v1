@@ -5,7 +5,7 @@ import torch.optim as optim
 from sklearn.model_selection import train_test_split
 
 def train_model():
-    print("🚀 Lesson 20: Starting AI Training Pipeline...")
+    print("[START]: Lesson 20 AI Training Pipeline...")
     
     # 1. Load the 25 features we engineered in Lesson 19
     df = pd.read_csv("data/processed/superstore_cleaned.csv")
@@ -27,7 +27,7 @@ def train_model():
         nn.Linear(64, 1)
     )
 
-    print(f"✅ Model Initialized with {X_train.shape[1]} Input Features.")
+    print("[SUCCESS]: Model Initialized with...")
     return model
 
 if __name__ == "__main__":
