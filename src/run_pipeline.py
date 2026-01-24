@@ -3,57 +3,63 @@ import subprocess
 import logging
 import sys
 
-# Hardened Logging: Forced UTF-8 encoding for the file to prevent charmap crashes
+# 1. SETUP: Absolute Warehouse Path
+LOG_FILE = r"D:\MLOps\logs\pipeline.log"
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+
+# Determine the absolute directory where this run_pipeline.py is located
+# This prevents the "src/src/" double-path ghost.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("pipeline.log", encoding='utf-8'),
+        logging.FileHandler(LOG_FILE, encoding='utf-8'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 
 def run_worker(script_name):
-    """Executes a pipeline stage with high-compatibility text handling."""
-    script_path = os.path.join("src", script_name)
-    logging.info(f"[STAGE START]: {script_name}")
-    
+    """Executes a pipeline stage using absolute paths."""
+    # This combines the folder of this script with the script name
+    script_path = os.path.join(BASE_DIR, script_name)
+    logging.info(f"--- [STAGE START]: {script_name} ---")
+
     try:
-        # sys.executable ensures we stay in your Drive D: virtual environment
+        # Use sys.executable to ensure we stay in your 'venv'
         result = subprocess.run(
-            [sys.executable, script_path], 
-            check=True, 
-            capture_output=True, 
+            [sys.executable, script_path],
+            check=True,
+            capture_output=True,
             text=True,
-            encoding='utf-8' # Force UTF-8 capture from the worker scripts
+            encoding='utf-8'
         )
-        logging.info(f"[STAGE SUCCESS]: {script_name}")
+        logging.info(f"--- [STAGE SUCCESS]: {script_name} ---")
         if result.stdout:
-            print(result.stdout.strip()) 
+            print(result.stdout.strip())
     except subprocess.CalledProcessError as e:
-        logging.error(f"[STAGE FAILED]: {script_name}")
-        # Capture the actual error from the worker for the log
         error_msg = e.stderr if e.stderr else "No error message captured."
+        logging.error(f"--- [STAGE FAILED]: {script_name} ---")
         logging.error(f"Worker Error Output: {error_msg}")
         sys.exit(1)
 
 def main():
-    logging.info("================================================")
-    logging.info("FACTORY START: PHASE IV -> PHASE V BRIDGE")
-    logging.info("================================================")
+    logging.info("=============================================")
+    logging.info("START: Pipeline Orchestrator Initialized...")
+    logging.info("=============================================")
 
-    # Step 1: Ingest (Warehouse to Project)
-    run_worker("ingest_data.py")
+    # List only the filenames; BASE_DIR handles the 'src/' part automatically
+    scripts = [
+        "ingest_data.py", 
+        "clean_data.py", 
+        "train_model.py"
+    ]
+    
+    for script in scripts:
+        run_worker(script)
 
-    # Step 2: Clean (The 25-Feature Expansion)
-    run_worker("clean_data.py")
-
-    # Step 3: Train (Lesson 20 AI Engine)
-    run_worker("train_model.py")
-
-    logging.info("================================================")
-    logging.info("MISSION ACCOMPLISHED: PIPELINE DEPLOYED")
-    logging.info("================================================")
+    logging.info("DONE: Mission Accomplished. Pipeline Cycle Complete.")
 
 if __name__ == "__main__":
     main()
