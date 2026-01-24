@@ -10,3 +10,66 @@
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f3ed' in position 4: character maps to <undefined>
 
+2026-01-24 08:41:47,586 - INFO - ================================================
+2026-01-24 08:41:47,586 - INFO - FACTORY START: PHASE IV -> PHASE V BRIDGE
+2026-01-24 08:41:47,586 - INFO - ================================================
+2026-01-24 08:41:47,586 - INFO - [STAGE START]: ingest_data.py
+2026-01-24 08:41:47,922 - INFO - [STAGE SUCCESS]: ingest_data.py
+2026-01-24 08:41:47,922 - INFO - [STAGE START]: clean_data.py
+2026-01-24 08:41:48,299 - INFO - [STAGE SUCCESS]: clean_data.py
+2026-01-24 08:41:48,299 - INFO - [STAGE START]: train_model.py
+2026-01-24 08:41:50,401 - ERROR - [STAGE FAILED]: train_model.py
+2026-01-24 08:41:50,402 - ERROR - Worker Error Output: Traceback (most recent call last):
+  File "D:\MLOps\projects\pipeline_v1\src\train_model.py", line 34, in <module>
+    train_model()
+  File "D:\MLOps\projects\pipeline_v1\src\train_model.py", line 8, in train_model
+    print("\U0001f680 Lesson 20: Starting AI Training Pipeline...")
+  File "D:\Python 3.11.9\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f680' in position 0: character maps to <undefined>
+
+2026-01-24 08:46:33,545 - INFO - ================================================
+2026-01-24 08:46:33,545 - INFO - FACTORY START: PHASE IV -> PHASE V BRIDGE
+2026-01-24 08:46:33,545 - INFO - ================================================
+2026-01-24 08:46:33,546 - INFO - [STAGE START]: ingest_data.py
+2026-01-24 08:46:33,909 - INFO - [STAGE SUCCESS]: ingest_data.py
+2026-01-24 08:46:33,909 - INFO - [STAGE START]: clean_data.py
+2026-01-24 08:46:34,274 - INFO - [STAGE SUCCESS]: clean_data.py
+2026-01-24 08:46:34,274 - INFO - [STAGE START]: train_model.py
+2026-01-24 08:46:36,390 - ERROR - [STAGE FAILED]: train_model.py
+2026-01-24 08:46:36,390 - ERROR - Worker Error Output: Traceback (most recent call last):
+  File "D:\MLOps\projects\pipeline_v1\src\train_model.py", line 34, in <module>
+    train_model()
+  File "D:\MLOps\projects\pipeline_v1\src\train_model.py", line 11, in train_model
+    df = pd.read_csv("data/processed/superstore_cleaned.csv")
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\MLOps\projects\pipeline_v1\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\MLOps\projects\pipeline_v1\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 620, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\MLOps\projects\pipeline_v1\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1620, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\MLOps\projects\pipeline_v1\venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1880, in _make_engine
+    self.handles = get_handle(
+                   ^^^^^^^^^^^
+  File "D:\MLOps\projects\pipeline_v1\venv\Lib\site-packages\pandas\io\common.py", line 873, in get_handle
+    handle = open(
+             ^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data/processed/superstore_cleaned.csv'
+
+2026-01-24 08:54:42,486 - INFO - ================================================
+2026-01-24 08:54:42,486 - INFO - FACTORY START: PHASE IV -> PHASE V BRIDGE
+2026-01-24 08:54:42,486 - INFO - ================================================
+2026-01-24 08:54:42,486 - INFO - [STAGE START]: ingest_data.py
+2026-01-24 08:54:42,826 - INFO - [STAGE SUCCESS]: ingest_data.py
+2026-01-24 08:54:42,826 - INFO - [STAGE START]: clean_data.py
+2026-01-24 08:54:43,191 - INFO - [STAGE SUCCESS]: clean_data.py
+2026-01-24 08:54:43,206 - INFO - [STAGE START]: train_model.py
+2026-01-24 08:54:45,346 - INFO - [STAGE SUCCESS]: train_model.py
+2026-01-24 08:54:45,346 - INFO - ================================================
+2026-01-24 08:54:45,346 - INFO - MISSION ACCOMPLISHED: PIPELINE DEPLOYED
+2026-01-24 08:54:45,362 - INFO - ================================================
