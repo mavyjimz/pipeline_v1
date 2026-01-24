@@ -1,51 +1,53 @@
-import subprocess
-import sys
-import logging
 import os
+import subprocess
+import logging
+import sys
 
-# --- 1. SYNCED PATHING (MLOps ROOT) ---
-# SCRIPT_DIR is MLOps/projects/pipeline_v1/src
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# Move up THREE levels to get to D:/MLOps
-# src -> pipeline_v1 -> projects -> MLOps
-MLOPS_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(SCRIPT_DIR)))
-
-LOG_FOLDER = os.path.join(MLOPS_ROOT, "logs")
-LOG_FILE = os.path.join(LOG_FOLDER, "pipeline_history.log")
-
-os.makedirs(LOG_FOLDER, exist_ok=True)
-
-# --- 2. LOGGING ---
+# Setup Logging to track our RX 580 performance and pipeline health
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(LOG_FILE, encoding='utf-8'),
+        logging.FileHandler("pipeline.log"),
         logging.StreamHandler(sys.stdout)
     ]
 )
 
-def run_worker(file_name):
-    worker_path = os.path.join(SCRIPT_DIR, file_name)
-    logging.info(f"--- EXECUTING: {file_name} ---")
+def run_worker(script_name):
+    """Executes a pipeline stage and handles errors immediately."""
+    script_path = os.path.join("src", script_name)
+    logging.info(f"🚀 Starting Stage: {script_name}")
+    
     try:
-        result = subprocess.run([sys.executable, worker_path], capture_output=True, text=True, check=True)
-        logging.info(result.stdout)
-        logging.info(f"--- SUCCESS: {file_name} finished ---")
+        # We use sys.executable to ensure we use your Drive D: Python environment
+        result = subprocess.run([sys.executable, script_path], check=True, capture_output=True, text=True)
+        logging.info(f"✅ Completed: {script_name}")
+        # Print the inner script's output (like our 25-feature count)
+        print(result.stdout) 
     except subprocess.CalledProcessError as e:
-        logging.error(f"!!! CRASH IN {file_name} !!!\n{e.stderr}")
-        sys.exit(1)
+        logging.error(f"❌ FAILED: {script_name}")
+        logging.error(f"Error Details: {e.stderr}")
+        sys.exit(1) # Stop the factory if one part breaks
 
-if __name__ == "__main__":
-    logging.info("PIPELINE START: Hardware Check - AMD RX 580")
+def main():
+    logging.info("================================================")
+    logging.info("🏭 FACTORY START: PHASE IV -> PHASE V BRIDGE")
+    logging.info("================================================")
 
-    # 1. INGESTION - Pull from Warehouse to Project
+    # STEP 1: Ingest Raw Data (Getting the Superstore CSV)
     run_worker("ingest_data.py")
-    
-    # 2. CLEANING - RX 580 Data Processing
+
+    # STEP 2: Feature Engineering (The Lesson 19 Breakthrough)
+    # This turns messy rows into 25 mathematical features!
     run_worker("clean_data.py")
-    
-    # 3. TRAINING - Generating the Model (.pkl file)
+
+    # STEP 3: AI Training (The Lesson 20 Goal)
+    # This sends our 25 features to the RX 580 [cite: 2026-01-09]
     run_worker("train_model.py")
 
-    logging.info("SUCCESS: Mission Accomplished - Model is Born!")
+    logging.info("================================================")
+    logging.info("🎯 MISSION ACCOMPLISHED: PIPELINE DEPLOYED")
+    logging.info("================================================")
+
+if __name__ == "__main__":
+    main()

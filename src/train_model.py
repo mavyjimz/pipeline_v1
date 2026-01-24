@@ -1,62 +1,34 @@
 import pandas as pd
-import numpy as np
-import os
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.model_selection import train_test_split
 
 def train_model():
-    MLOPS_ROOT = r"D:\MLOps"
-    input_file = os.path.join(MLOPS_ROOT, 'input_data', 'processed', 'sales_summary.csv')
+    print("🚀 Lesson 20: Starting AI Training Pipeline...")
     
-    if not os.path.exists(input_file):
-        print(f"ERROR: No processed data found at {input_file}")
-        return
-
-    df = pd.read_csv(input_file)
-
-    # 1. THE BOUNCER: Only allow numbers
-    df_numeric = df.select_dtypes(include=[np.number])
+    # 1. Load the 25 features we engineered in Lesson 19
+    df = pd.read_csv("data/processed/superstore_cleaned.csv")
     
-    # 2. THE JANITOR: Remove any remaining NaNs
-    df_clean = df_numeric.dropna().copy()
+    X = df.drop(columns=['Sales']).values
+    y = df['Sales'].values.reshape(-1, 1)
 
-    if df_clean.empty:
-        print("ERROR: No data left after cleaning!")
-        return
+    # 2. 80/20 Split (Crucial for Deployment)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # 3. THE NORMALIZATION SHIELD: Force everything between 0 and 1
-    # This prevents the 'NaN' weights you were seeing!
-    for col in df_clean.columns:
-        c_min = df_clean[col].min()
-        c_max = df_clean[col].max()
-        if c_max > c_min:
-            df_clean[col] = (df_clean[col] - c_min) / (c_max - c_min)
-        else:
-            df_clean[col] = 0.0
-
-    # Define X (features) and y (target)
-    X = df_clean.drop(columns=['Sales']).values.astype(np.float32)
-    y = df_clean['Sales'].values.reshape(-1, 1).astype(np.float32)
-
-    # 4. THE TRAINING ENGINE
-    model = LinearRegression()
-    model.fit(X, y)
-
-    # Calculate RMSE
-    predictions = model.predict(X)
-    rmse = np.sqrt(mean_squared_error(y, predictions))
-
-    # REPORTING
-    print(f"\n--- EVALUATION REPORT (LESSON 18) ---")
-    print(f"Features Detected: {len(df_clean.columns) - 1}")
-    print(f"RMSE: ${rmse:.2f}")
+    # 3. Convert to Tensors for RX 580 (CUDA)
+    X_train = torch.tensor(X_train, dtype=torch.float32)
+    y_train = torch.tensor(y_train, dtype=torch.float32)
     
-    # Check weights to ensure they aren't NaN
-    weights = np.nan_to_num(model.coef_[0])
-    feature_names = df_clean.drop(columns=['Sales']).columns
-    print("\n--- FEATURE WEIGHTS ---")
-    for name, weight in zip(feature_names, weights):
-        print(f"{name}: {weight:.4f}")
+    # 4. Simple Neural Network Architecture (25 inputs)
+    model = nn.Sequential(
+        nn.Linear(X_train.shape[1], 64),
+        nn.ReLU(),
+        nn.Linear(64, 1)
+    )
+
+    print(f"✅ Model Initialized with {X_train.shape[1]} Input Features.")
+    return model
 
 if __name__ == "__main__":
     train_model()
