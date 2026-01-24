@@ -8,7 +8,8 @@ def train_model():
     print("[START]: Lesson 20 AI Training Pipeline...")
     
     # 1. Load the 25 features we engineered in Lesson 19
-    df = pd.read_csv("data/processed/superstore_cleaned.csv")
+    processed_path = r"D:\MLOps\input_data\processed\sales_summary.csv"
+    df = pd.read_csv(processed_path)
     
     X = df.drop(columns=['Sales']).values
     y = df['Sales'].values.reshape(-1, 1)
