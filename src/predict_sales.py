@@ -1,50 +1,49 @@
 import torch
-import pandas as pd
+import torch.nn as nn
+import torch_directml
 import os
-from train_model import SalesPredictor # Importing the 'Brain' structure
 
-def predict():
-    # --- THE LAW: ABSOLUTE GPS PATHS ---
-    MLOPS_ROOT = r"D:\MLOps"
-    MODEL_PATH = os.path.join(MLOPS_ROOT, "models", "sales_model.pth")
-    DATA_PATH = os.path.join(MLOPS_ROOT, "input_data", "processed", "sales_summary.csv")
+def run_prophecy():
+    print("[START]: Lesson 22 - The Sales Prophet Engine")
     
-    # 1. CHECK IF EVIDENCE EXISTS
-    if not os.path.exists(MODEL_PATH):
-        print(f"❌ ERROR: Model not found at {MODEL_PATH}")
+    # 1. Hardware Initialization
+    device = torch_directml.device()
+    print(f"--- Hardware Active: {device} ---")
+
+    # 2. Configuration (The Contract)
+    INPUT_SIZE = 25  # This MUST match the Brain we trained
+    model_path = r"D:\MLOps\models\sales_model.pth"
+
+    # 3. Build the Architecture (The Mirror)
+    model = nn.Sequential(
+        nn.Linear(INPUT_SIZE, 64),
+        nn.ReLU(),
+        nn.Linear(64, 1)
+    ).to(device)
+
+    # 4. Load the Brain from the Warehouse
+    if os.path.exists(model_path):
+        # We use weights_only=False to ensure the AMD state loads correctly
+        model.load_state_dict(torch.load(model_path, map_location=device, weights_only=False))
+        model.eval()
+        print(f"[SUCCESS]: 25-Feature Brain loaded successfully.")
+    else:
+        print(f"[ERROR]: Brain file not found at {model_path}!")
         return
-    if not os.path.exists(DATA_PATH):
-        print(f"❌ ERROR: No processed data at {DATA_PATH}")
-        return
 
-    # 2. PREPARE THE DATA (Lesson 15 One-Hot Encoding)
-    df = pd.read_csv(DATA_PATH)
-    required_cols = ['Category', 'Region', 'Segment']
-    
-    # We apply the same transformation used in training
-    df_encoded = pd.get_dummies(df, columns=required_cols)
-    X_df = df_encoded.select_dtypes(include=['number', 'bool']).copy()
-    
-    if 'Sales' in X_df.columns:
-        X_df = X_df.drop(columns=['Sales'])
+    # 5. Generate a Prediction
+    # We create a dummy input of 25 features to test the math
+    # In a real run, this would be a row from your sales_summary.csv
+    sample_input = torch.randn(1, INPUT_SIZE).to(device)
 
-    # 3. INITIALIZE AND LOAD THE BORN MODEL
-    input_dim = X_df.shape[1]
-    model = SalesPredictor(input_dim)
-    
-    # Load weights (using 2026 security standards)
-    model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
-    model.eval() # Tell the model: "We are predicting, not learning"
-
-    # 4. MAKE A PREDICTION (Using the first row of your clean data)
-    sample_input = torch.tensor(X_df.iloc[:1].values.astype(float), dtype=torch.float32)
-    
+    print("--- Executing Prediction on RX 580 ---")
     with torch.no_grad():
         prediction = model(sample_input)
-    
-    print(f"\n🔮 PREDICTION SYSTEM ONLINE")
-    print(f"Input Features: {list(X_df.columns)}")
-    print(f"Predicted Sales Result: ${prediction.item():.2f}")
+        
+    print("-----------------------------------------")
+    print(f"PROPHET RESULT (Sales): {prediction.item():.4f}")
+    print("-----------------------------------------")
+    print("[DONE]: Lesson 22 Complete.")
 
 if __name__ == "__main__":
-    predict()
+    run_prophecy()
