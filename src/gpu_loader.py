@@ -2,34 +2,44 @@ import torch
 import torch_directml
 import pandas as pd
 import os
-import time
 
-def load_data_to_vram():
-    # 1. Connect to your AMD RX 580
+def load_production_batch():
+    print("[START]: Lesson 27 - Smart GPU Batch Loader")
     device = torch_directml.device()
-    print(f"📡 Device Connected: {device}")
+    
+    # 1. Path Configuration
+    file_path = r"D:\MLOps\input_data\raw\superstore_sales.csv"
+    
+    # 2. Extract Data
+    if not os.path.exists(file_path):
+        print(f"[ERROR]: Source CSV missing at {file_path}")
+        return
 
-    # 2. Find the CSV in the Warehouse
-    file_path = "../../input_data/raw/superstore_sales.csv"
-    
-    print(f"📂 Reading from Warehouse: {file_path}")
     df = pd.read_csv(file_path)
-          
-    # 3. Prepare the data for the GPU (only using numbers)
-    # We take the 100,000 rows from 'Value_A'
-    numerical_values = df['Value_A'].values
+    print(f"--- Loaded {len(df)} rows from CSV ---")
+
+    # 3. Transform Text to Model Features (Indices from Lesson 26)
+    # We create a 25-feature tensor for all 9,800 rows
+    input_size = 25
+    batch_tensor = torch.zeros(len(df), input_size).to(device)
+
+    # MAP REGIONS (Example mapping based on our Lesson 26 Logic)
+    # West = Index 5, East = Index 6, South = Index 7, Central = Index 8
+    region_map = {"West": 5, "East": 6, "South": 7, "Central": 8}
+    category_map = {"Furniture": 0, "Technology": 1, "Office Supplies": 2}
+
+    print("--- Converting Text to GPU Tensors (ETL Process) ---")
     
-    # 4. THE JUMP: Move from RAM to VRAM
-    print("🚀 Pushing 100,000 rows to RX 580 VRAM...")
-    
-    # Convert to Tensor and send to DirectML device
-    gpu_tensor = torch.tensor(numerical_values, dtype=torch.float32).to(device)
-    
-    print(f"✅ Success! GPU Tensor Shape: {gpu_tensor.shape}")
-    print("💎 The data is now live in your 8GB VRAM.")
-    
-    # We pause for 5 seconds so you have time to see the VRAM monitor flicker!
-    time.sleep(5)
+    # Efficiently fill the tensor (Vectorized mapping)
+    for i, row in df.iterrows():
+        reg_idx = region_map.get(row['Region'])
+        cat_idx = category_map.get(row['Category'])
+        
+        if cat_idx is not None: batch_tensor[i, cat_idx] = 1.0
+        if reg_idx is not None: batch_tensor[i, reg_idx] = 1.0
+
+    print(f"[SUCCESS]: Pushed {batch_tensor.shape} to RX 580 VRAM.")
+    return batch_tensor
 
 if __name__ == "__main__":
-    load_data_to_vram()
+    load_production_batch()
