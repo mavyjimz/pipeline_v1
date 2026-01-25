@@ -4,52 +4,67 @@ import torch_directml
 import os
 
 def run_prophet():
-    print("[START]: Lesson 25 - The Sales Decoder Engine")
+    print("[START]: Lesson 26 - The Batch Prophet Engine")
 
     # 1. Hardware Initialization (RX 580 Optimization)
     device = torch_directml.device()
     print(f"--- Hardware Active: {device} ---")
 
-    # 2. Configuration (The 25-Feature Contract)
-    INPUT_SIZE = 25 
+    # 2. Configuration
+    INPUT_SIZE = 25
     model_path = r"D:\MLOps\models\sales_model.pth"
 
-    # 3. Build the Architecture (The Mirror)
+    # 3. Build Architecture (The Mirror)
     model = nn.Sequential(
         nn.Linear(INPUT_SIZE, 64),
         nn.ReLU(),
         nn.Linear(64, 1)
     ).to(device)
 
-    # 4. Load the Brain from the Warehouse
+    # 4. Load the Brain
     if os.path.exists(model_path):
-        # weights_only=False is required for AMD/DirectML state loads
         model.load_state_dict(torch.load(model_path, map_location=device, weights_only=False))
         model.eval()
-        print(f"[SUCCESS]: 25-Feature Brain loaded successfully.")
+        print(f"[SUCCESS]: 25-Feature Brain loaded for Batching.")
     else:
         print(f"[ERROR]: Brain file not found at {model_path}!")
         return
 
-    # 5. Targeted Scenario (Furniture @ West Region)
-    sample_input = torch.zeros(1, INPUT_SIZE).to(device)
-    sample_input[0, 0] = 1.0  # Index 0: Furniture
-    sample_input[0, 5] = 1.0  # Index 5: West Region
+    # 5. BATCH SCENARIOS (Lesson 26 Upgrade)
+    # We create 3 scenarios at once: Furniture@West, Tech@East, Office@South
+    batch_size = 3
+    batch_input = torch.zeros(batch_size, INPUT_SIZE).to(device)
 
-    print("--- Executing Decoded Prediction on RX 580 ---")
+    # Scenario 0: Furniture (Index 0) at West (Index 5)
+    batch_input[0, 0] = 1.0 
+    batch_input[0, 5] = 1.0
+
+    # Scenario 1: Technology (Index 1) at East (Index 6)
+    batch_input[1, 1] = 1.0
+    batch_input[1, 6] = 1.0
+
+    # Scenario 2: Office Supplies (Index 2) at South (Index 7)
+    batch_input[2, 2] = 1.0
+    batch_input[2, 7] = 1.0
+
+    print(f"--- Executing Batch Prediction ({batch_size} rows) on RX 580 ---")
+    
+    
     with torch.no_grad():
-        prediction = model(sample_input)
-        raw_value = prediction.item()
+        # The RX 580 processes all 3 rows in one single mathematical operation
+        predictions = model(batch_input)
         
-        # LESSON 25: THE DECODER
-        # We assume a scaling factor of 100 from our training phase
-        decoded_sales = raw_value * 100
+    print("-" * 40)
+    regions = ["West", "East", "South"]
+    categories = ["Furniture", "Technology", "Office Supplies"]
 
-    print("---------------------------------------")
-    print(f"RAW AI SIGNAL    : {raw_value:.4f}")
-    print(f"DECODED PREDICTION: ${decoded_sales:,.2f} USD")
-    print("---------------------------------------")
-    print("[DONE]: Lesson 25 Complete.")
+    for i in range(batch_size):
+        raw_value = predictions[i].item()
+        decoded_sales = raw_value * 100
+        print(f"ROW {i} [{categories[i]} @ {regions[i]}]: ${decoded_sales:,.2f} USD")
+    
+    print("-" * 40)
+    print("[DONE]: Lesson 26 Complete.")
 
 if __name__ == "__main__":
     run_prophet()
