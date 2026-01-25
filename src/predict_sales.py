@@ -4,7 +4,7 @@ import torch_directml
 import os
 
 def run_prophecy():
-    print("[START]: Lesson 22 - The Sales Prophet Engine")
+    print("[START]: The Sales Prophet Engine")
     
     # 1. Hardware Initialization
     device = torch_directml.device()
@@ -31,19 +31,23 @@ def run_prophecy():
         print(f"[ERROR]: Brain file not found at {model_path}!")
         return
 
-    # 5. Generate a Prediction
-    # We create a dummy input of 25 features to test the math
-    # In a real run, this would be a row from your sales_summary.csv
-    sample_input = torch.randn(1, INPUT_SIZE).to(device)
+    # 5. Generate a Real Prediction (Lesson 24 Upgrade)
+    # Instead of random noise, we create a zeroed tensor
+    sample_input = torch.zeros(1, INPUT_SIZE).to(device)
 
-    print("--- Executing Prediction on RX 580 ---")
+    # We "flip the switches" for a specific scenario:
+    # Let's assume: Index 0 = Furniture, Index 5 = West Region
+    sample_input[0, 0] = 1.0 
+    sample_input[0, 5] = 1.0 
+
+    print("--- Executing Targeted Scenario Prediction on RX 580 ---")
     with torch.no_grad():
         prediction = model(sample_input)
         
     print("-----------------------------------------")
     print(f"PROPHET RESULT (Sales): {prediction.item():.4f}")
     print("-----------------------------------------")
-    print("[DONE]: Lesson 22 Complete.")
+    print("[DONE]: Complete.")
 
 if __name__ == "__main__":
     run_prophecy()
