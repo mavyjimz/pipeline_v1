@@ -59,14 +59,19 @@ def run_grand_prediction():
         print("[ERROR]: sales_model.pth not found on Drive D!")
         return
 
-    # 5. The GPU Calculation
-    print(f"[COMPUTE]: Processing 9,800 rows on the GPU...")
+    # 5. THE STRESS TEST (Lesson 29.5)
+    print(f"[STRESS]: Running 9,800 rows x 1,000 loops...")
+    
     with torch.no_grad():
-        predictions = model(data_tensor)
+        # This loop keeps the GPU busy so we can see the telemetry move!
+        for i in range(1000):
+            predictions = model(data_tensor)
+            if i % 200 == 0:
+                print(f"   > Loop {i}/1000 complete...")
 
     print("="*50)
-    print(f"✅ SUCCESS: {len(predictions)} Predictions Generated!")
-    print(f"Sample Prediction (Row 1): ${predictions[0].item() * 100:,.2f}")
+    print(f"✅ SUCCESS: Stress test complete!")
+    print(f"Final Prediction: ${predictions[0].item() * 100:,.2f}")
     print("="*50)
 
 if __name__ == "__main__":
