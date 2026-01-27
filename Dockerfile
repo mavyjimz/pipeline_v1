@@ -1,17 +1,16 @@
-# 1. Use a lightweight Python 3.10 foundation
-FROM python:3.10-slim
-
-# 2. Set the internal factory floor to /app
-WORKDIR /app
-
-# 3. Copy only the shopping list first (helps with speed)
+# STAGE 1: The Builder (We do the heavy work here)
+FROM python:3.11-slim AS builder
+WORKDIR /build
 COPY requirements.txt .
+# We install everything into a specific folder called /install
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# 4. Install the tools in CPU mode
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 5. Copy all our Lesson 35 scripts into the container
+# STAGE 2: The Final Image (This is what stays on your D: drive)
+FROM python:3.11-slim
+WORKDIR /app
+# We ONLY grab the finished packages from the builder, leaving the trash behind
+COPY --from=builder /install /usr/local
+# Copy your actual pipeline scripts
 COPY . .
 
-# 6. Run the pipeline when the container starts
 CMD ["python", "src/main_pipeline.py"]
