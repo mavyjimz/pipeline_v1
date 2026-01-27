@@ -6,7 +6,7 @@ import os
 
 # --- PATH CONFIGURATION ---
 INPUT_PATH = r"D:\MLOps\input_data\processed\cleaned_sales.csv"
-MODEL_PATH = r"D:\MLOps\models\sales_model.pth"
+MODEL_PATH = r"models\sales_model.pth"
 OUTPUT_PATH = r"D:\MLOps\projects\pipeline_v1\reports\final_predictions.csv"
 
 def get_data_from_warehouse():
