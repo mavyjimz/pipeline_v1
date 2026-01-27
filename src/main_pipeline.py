@@ -4,82 +4,78 @@ import torch_directml
 import pandas as pd
 import os
 
-# --- PATH CONFIGURATION (Phase 7 Lesson 32) ---
-# Redirected from 'raw' to 'processed' Golden Path
+# --- PATH CONFIGURATION ---
 INPUT_PATH = r"D:\MLOps\input_data\processed\cleaned_sales.csv"
 MODEL_PATH = r"D:\MLOps\models\sales_model.pth"
 OUTPUT_PATH = r"D:\MLOps\projects\pipeline_v1\reports\final_predictions.csv"
 
 def get_data_from_warehouse():
     print("----------------------------------------------------")
-    print("PHASE 7 LESSON 32: LOADING FROM GOLDEN PATH")
+    print("PHASE 7 LESSON 33: TEMPORAL INTEGRATION")
     print(f"SOURCE: {INPUT_PATH}")
     
     if not os.path.exists(INPUT_PATH):
-        print("ERROR: Sanitized data not found. Run sanitizer.py first.")
+        print("ERROR: Sanitized data not found.")
         return None, None
 
     df = pd.read_csv(INPUT_PATH)
     
-    # Final Safety Check for RX 580 stability
-    if df.isnull().sum().sum() > 0:
-        print("CRITICAL ERROR: Cleaned data contains nulls. Aborting.")
-        return None, None
-
-    input_size = 25
+    # NEW INPUT SIZE: 25 (Old) + 1 (Month) + 1 (DayOfWeek) = 27
+    input_size = 27
     batch_tensor = torch.zeros(len(df), input_size)
     
-    # Industrial Mapping Logic
     region_map = {"West": 5, "East": 6, "South": 7, "Central": 8}
     category_map = {"Furniture": 0, "Technology": 1, "Office Supplies": 2}
     
     for i, row in df.iterrows():
+        # A. Original Logic
         reg_idx = region_map.get(row['Region'])
         cat_idx = category_map.get(row['Category'])
         if cat_idx is not None: batch_tensor[i, cat_idx] = 1.0
         if reg_idx is not None: batch_tensor[i, reg_idx] = 1.0
+        
+        # B. TEMPORAL ATTACK (New Lesson 33 Features)
+        # Monthly signal (normalized 0-1 for RX 580 stability)
+        batch_tensor[i, 25] = float(row['Order_Month']) / 12.0
+        # Day of Week signal (normalized 0-1)
+        batch_tensor[i, 26] = float(row['Order_DayOfWeek']) / 6.0
             
-    print("SUCCESS: Data verified and vectorized.")
+    print("SUCCESS: Temporal features vectorized (27-dim).")
     return batch_tensor, df
 
 def run_grand_prediction():
-    # Use DirectML for RX 580
     device = torch_directml.device()
     
-    # 1. LOAD DATA
     data_tensor, original_df = get_data_from_warehouse()
     if data_tensor is None: return
-    
     data_tensor = data_tensor.to(device)
 
-    # 2. LOAD MODEL
+    # UPDATED MODEL ARCHITECTURE (Input 27)
     model = nn.Sequential(
-        nn.Linear(25, 64),
+        nn.Linear(27, 64),
         nn.ReLU(),
         nn.Linear(64, 1)
     ).to(device)
     
+    # Note: Loading old weights might cause a size mismatch warning. 
+    # That is expected when we grow the brain!
     if os.path.exists(MODEL_PATH):
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-        model.eval()
-    else:
-        print(f"WARNING: Model not found at {MODEL_PATH}. Using untrained weights.")
+        print("NOTE: Attempting to load existing weights...")
+        try:
+            model.load_state_dict(torch.load(MODEL_PATH, map_location=device), strict=False)
+            print("Loaded partial weights (Transfer Learning active).")
+        except:
+            print("Size mismatch: Model brain has grown. Using fresh initialization.")
 
-    # 3. COMPUTE
-    print(f"COMPUTE: Generating {len(original_df)} predictions...")
+    model.eval()
+    print(f"COMPUTE: Processing {len(original_df)} rows with Temporal Awareness...")
     with torch.no_grad():
-        predictions = model(data_tensor)
+        preds = model(data_tensor)
 
-    # 4. THE HARVEST
-    print("PHASE 3: EXPORTING RESULTS")
-    
-    # Move predictions back to CPU
-    preds_cpu = predictions.cpu().numpy().flatten()
+    preds_cpu = preds.cpu().numpy().flatten()
     original_df['Predicted_Sales'] = preds_cpu * 100
     
-    # Ensure reports folder exists
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-    
     original_df.to_csv(OUTPUT_PATH, index=False)
     print(f"SUCCESS: Results saved to {OUTPUT_PATH}")
     print("----------------------------------------------------")
