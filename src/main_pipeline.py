@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import pandas as pd
 import os
+import time
 
 # --- HARDWARE FALLBACK LOGIC ---
 try:
@@ -13,16 +14,16 @@ except (ImportError, OSError):
     print("NOTE: DirectML not found. Falling back to CPU Mode.")
 
 # --- PATH CONFIGURATION (Internal Container Paths) ---
-# We use /app/ because that is our WORKDIR in the Dockerfile
 INPUT_PATH = "/app/input_data/processed/cleaned_sales.csv"
 MODEL_PATH = "/app/models/sales_model.pth"
 OUTPUT_PATH = "/app/reports/final_predictions.csv"
+LOG_PATH = "/app/logs/pipeline_log.txt"  # New for Lesson #42
 
 def get_data_from_warehouse():
-    print("------------------------------------------------")
-    print("PHASE 8 LESSON #37: CONTAINERIZED EXECUTION")
+    print("-------------------------------------------")
+    print("PHASE 8 LESSON #42: CONTAINERIZED EXECUTION")
     print(f"SOURCE: {INPUT_PATH}")
-    
+
     if not os.path.exists(INPUT_PATH):
         print(f"ERROR: File not found at {INPUT_PATH}")
         return None, None
@@ -49,7 +50,7 @@ def get_data_from_warehouse():
 def run_grand_prediction():
     data_tensor, original_df = get_data_from_warehouse()
     if data_tensor is None: return
-    
+
     data_tensor = data_tensor.to(device)
 
     model = nn.Sequential(
@@ -61,14 +62,14 @@ def run_grand_prediction():
     if os.path.exists(MODEL_PATH):
         print("NOTE: Attempting to load existing weights...")
         try:
-            model.load_state_dict(torch.load(MODEL_PATH, map_location=device), strict=False)
+            model.load_state_dict(torch.load(MODEL_PATH, map_location=device, strict=False))
             print("Loaded partial weights (Transfer Learning active).")
         except Exception as e:
             print(f"Fresh initialization: {e}")
 
     model.eval()
     print(f"COMPUTE: Processing {len(original_df)} rows on {device}...")
-    
+
     with torch.no_grad():
         preds = model(data_tensor)
 
@@ -78,7 +79,17 @@ def run_grand_prediction():
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     original_df.to_csv(OUTPUT_PATH, index=False)
     print(f"SUCCESS: Results saved to {OUTPUT_PATH}")
-    print("------------------------------------------------")
+
+    # --- LESSON #42: PERSISTENT LOGGING ---
+    os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+    with open(LOG_PATH, "a") as f:
+        f.write(f"[{pd.Timestamp.now()}] Run Successful. Rows: {len(original_df)} | Device: {device}\n")
+    print(f"SUCCESS: Audit trail updated in {LOG_PATH}")
+    print("-------------------------------------------")
 
 if __name__ == "__main__":
     run_grand_prediction()
+    
+    # Lesson #42: Stay Alive Buffer (300 seconds)
+    print("Container staying active for 5 minutes for health monitoring...")
+    time.sleep(300)
