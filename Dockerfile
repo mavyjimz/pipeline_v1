@@ -1,7 +1,7 @@
-# Use an official Python runtime as a parent image
+# Use an official Python runtime
 FROM python:3.9-slim
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
 # Install system dependencies
@@ -9,15 +9,15 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Create the internal bridge folder
-RUN mkdir -p /app/shared_output
+# Create internal directories for Input and Output
+RUN mkdir -p /app/input_data/processed /app/shared_output
 
-# Copy the requirements file and install dependencies
+# Copy requirements and install
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
+# Copy the entire project
 COPY . .
 
-# Command to run the application
-CMD ["python", "main.py"]
+# Set the exact path to the execution script
+CMD ["python", "src/main_pipeline.py"]
