@@ -3,10 +3,18 @@ version: '3.8'
 services:
   pipeline:
     build: .
+    container_name: mlops_pipeline_engine
     volumes:
-      # Map project code for real-time updates
+      # Bridge 1: The Code (Current project folder)
       - .:/app
-      # Map the bridge: Local D:\MLOps\shared_data to Container /app/shared_output
+      
+      # Bridge 2: The Fuel (Pointing to D:\MLOps\input_data)
+      - ../../input_data:/app/input_data
+      
+      # Bridge 3: The Gold (Pointing to D:\MLOps\shared_data)
       - ../../shared_data:/app/shared_output
+      
     environment:
       - PYTHONUNBUFFERED=1
+    # This keeps the container open so we can read the logs if it fails
+    restart: "no"
