@@ -5,16 +5,22 @@ services:
     build: .
     container_name: mlops_pipeline_engine
     volumes:
-      # Bridge 1: The Code (Current project folder)
+      # Bridge 1: The Code (Project Folder)
+      # Maps local project files to the "Hotel Room" /app
       - .:/app
       
-      # Bridge 2: The Fuel (Pointing to D:\MLOps\input_data)
+      # Bridge 2: The Fuel (Input Data)
+      # Reaches up out of projects/pipeline_v1 to D:\MLOps\input_data
       - ../../input_data:/app/input_data
       
-      # Bridge 3: The Gold (Pointing to D:\MLOps\shared_data)
+      # Bridge 3: The Gold (Shared Landing Zone)
+      # Reaches up out of projects/pipeline_v1 to D:\MLOps\shared_data
       - ../../shared_data:/app/shared_output
+
+      # Bridge 4: The Internal Audit (Reports)
+      # Keeps your internal reports folder synced for manual checks
+      - ./reports:/app/reports
       
     environment:
       - PYTHONUNBUFFERED=1
-    # This keeps the container open so we can read the logs if it fails
     restart: "no"
