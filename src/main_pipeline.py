@@ -1,46 +1,56 @@
 import pandas as pd
-import numpy as np
-import torch
-import torch.nn as nn
 import os
+import sys
 
-# --- PATH HANDSHAKE (Aligned with Lesson #93 YAML) ---
-INPUT_PATH = "/app/input_data/processed/cleaned_sales.csv"
-OUTPUT_PATH = "/app/shared_output/final_predictions.csv"
+# ==========================================
+# PATH CONFIGURATION (Locked to YAML Bridge)
+# ==========================================
+# These match the /app/... paths in your docker-compose.yml
+INPUT_FILE  = "/app/input_data/processed/cleaned_sales.csv"
+OUTPUT_DIR  = "/app/shared_output"
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, "final_predictions.csv")
+
+def diagnostic_check():
+    """Verify that the Docker Bridges are actually connected."""
+    print("--- SYSTEM DIAGNOSTICS ---")
+    print(f"Current Working Directory: {os.getcwd()}")
+    
+    # Check Input Bridge
+    if os.path.exists(INPUT_FILE):
+        print(f"Input Bridge: FOUND ({INPUT_FILE})")
+    else:
+        print(f"Input Bridge: MISSING! Check your YAML ../../input_data mapping.")
+        
+    # Check/Create Output Bridge
+    if not os.path.exists(OUTPUT_DIR):
+        print(f"Creating Output Directory: {OUTPUT_DIR}")
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+    else:
+        print(f"Output Bridge: READY ({OUTPUT_DIR})")
+    print("-----------------------------\n")
 
 def run_pipeline():
-    print("🚀 Starting MLOps Pipeline...")
-
-    # 1. Self-Healing: Ensure the 'Loading Dock' exists
-    # This fixes the Error you saw earlier by building the folder in Linux
-    output_dir = os.path.dirname(OUTPUT_PATH)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir, exist_ok=True)
-        print(f"📁 Created missing directory: {output_dir}")
-
-    # 2. Load Data
-    try:
-        df = pd.read_csv(INPUT_PATH)
-        print(f"✅ Data loaded successfully: {len(df)} rows found.")
-    except FileNotFoundError:
-        print(f"❌ ERROR: Could not find fuel at {INPUT_PATH}. Check Bridge 2!")
-        return
-
-    # 3. Hardware Check (RX 580 / CPU Fallback)
-    device = torch.device("cpu") # Defaulting to CPU for stability on 9.8k rows
-    print(f"💻 Using device: {device}")
-
-    # --- (Logic from Lesson #87: Simple Prediction Simulation) ---
-    # We use your existing logic here to keep the 9,800 rows consistent
-    df['Predicted_Sales'] = df['Sales'] * 1.05 # Simulating a 5% growth prediction
+    diagnostic_check()
     
-    # 4. Save the Gold
+    print("Starting Data Processing...")
     try:
-        df.to_csv(OUTPUT_PATH, index=False)
-        print(f"✨ SUCCESS: Gold delivered to {OUTPUT_PATH}")
-        print(f"📂 Check your Windows folder: D:\\MLOps\\shared_data")
+        # Load the 9,800 rows
+        df = pd.read_csv(INPUT_FILE)
+        
+        # --- CORE LOGIC ---
+        # Simulation of the 5% growth prediction from yesterday
+        df['Predicted_Sales'] = df['Sales'] * 1.05
+        
+        # Save to the Shared Bridge
+        df.to_csv(OUTPUT_FILE, index=False)
+        
+        print(f"SUCCESS: Processed {len(df)} rows.")
+        print(f"File saved to: {OUTPUT_FILE}")
+        print(f"Check Windows Drive D: D:\\MLOps\\shared_data\\")
+
     except Exception as e:
-        print(f"❌ ERROR during save: {e}")
+        print(f"PIPELINE ERROR: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     run_pipeline()
