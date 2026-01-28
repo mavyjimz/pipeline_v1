@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  pipeline:
+    build: .
+    volumes:
+      # Map project code for real-time updates
+      - .:/app
+      # Map the bridge: Local D:\MLOps\shared_data to Container /app/shared_output
+      - ../../shared_data:/app/shared_output
+    environment:
+      - PYTHONUNBUFFERED=1
