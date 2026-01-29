@@ -1,6 +1,29 @@
-__pycache__/
-*.pyc
+# --- MLOps Portfolio Shield ---
+
+# 1. Ignore the massive AI Brains (Checkpoints/VAEs/LoRAs)
+**/models/
+**/temp/
+
+# 2. Ignore the Visual Outputs (Your generated images)
+**/output/
+
+# 3. Ignore the Python "Engine" (Virtual Environments)
 venv/
-logs/
-*.7z
-*.zip
+.venv/
+ENV/
+bin/
+lib/
+include/
+
+# 4. Ignore System/OS Junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 5. Ignore Python Cache
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# 6. Ignore Data (Keep your raw CSV, but ignore temp excel files)
+~$*.xlsx
