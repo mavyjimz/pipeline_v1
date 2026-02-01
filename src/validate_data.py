@@ -1,60 +1,27 @@
-import os
 import pandas as pd
-import glob
+import os
 
-# 1. THE SETTINGS (The Warehouse Path)
-INPUT_DIR = r'D:\MLOps\input_data\raw'
-LOGBOOK_FILE = "detected_error.txt"
-
-def validate():
-    print("\n--- DATA BOUNCER: STARTING INSPECTION ---")
+def validate_sales_data(file_path):
+    print("LOG: Starting validation on: " + file_path)
     
-    # 2. CHECK IF FOLDER EXISTS
-    if not os.path.exists(INPUT_DIR):
-        error_msg = f"ERROR: Warehouse path not found: {INPUT_DIR}"
-        print(error_msg)
-        with open(LOGBOOK_FILE, "w") as f:
-            f.write(error_msg)
-        return False
+    if not os.path.exists(file_path):
+        print("ERROR: File not found.")
+        return
 
-    # 3. LOOK FOR TRUCKS (CSV FILES)
-    csv_files = glob.glob(os.path.join(INPUT_DIR, "*.csv"))
-    if not csv_files:
-        error_msg = "REJECTED: No CSV files found in warehouse!"
-        print(error_msg)
-        with open(LOGBOOK_FILE, "w") as f:
-            f.write(error_msg)
-        return False
-
-    # 4. INSPECT EACH TRUCK
-    for file_path in csv_files:
-        filename = os.path.basename(file_path)
-        print(f"\nChecking: {filename}")
-
-        try:
-            df = pd.read_csv(file_path)
-            cols = [c.lower() for c in df.columns]
-
-            if 'sales' in cols:
-                success_msg = f"RESULT: PASSED ({len(df)} rows found)"
-                print(success_msg)
-                # Clear the logbook if things are good
-                with open(LOGBOOK_FILE, "w") as f:
-                    f.write("SYSTEM HEALTHY: All Sales Data Verified.")
-            else:
-                error_msg = f"ALARM: Missing 'Sales' column in {filename}!"
-                print(f"RESULT: FAILED ({error_msg})")
-                with open(LOGBOOK_FILE, "w") as f:
-                    f.write(error_msg)
-
-        except Exception as e:
-            error_msg = f"RESULT: ERROR reading file: {e}"
-            print(error_msg)
-            with open(LOGBOOK_FILE, "w") as f:
-                f.write(error_msg)
-
-    print("\n--- END OF REPORT ---")
-    return True
+    try:
+        df = pd.read_csv(file_path)
+        
+        # The Core Check
+        if 'Sales' not in df.columns:
+            print("ALARM: Missing 'Sales' column!")
+        else:
+            print("SUCCESS: 'Sales' column verified.")
+            print(df.head())
+            
+    except Exception as e:
+        print("ERROR: Could not read CSV. Details: " + str(e))
 
 if __name__ == "__main__":
-    validate()
+    # Drive D project path
+    target_file = r'D:\MLOps\projects\pipeline_v1\input_data\superstore_sales.csv'
+    validate_sales_data(target_file)
