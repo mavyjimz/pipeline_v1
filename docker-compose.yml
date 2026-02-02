@@ -2,9 +2,8 @@ services:
   pipeline_engine:
     build: .
     container_name: mlops_pipeline_engine
+    # No ports needed for debugging, but we can leave them
     ports:
       - "8501:8501"
-    # We keep volumes commented out to prevent Windows from hiding the internal files
-    # volumes:
-    #   - .:/app
-    restart: always
+    # Ensure no volumes are overriding our internal files
+    restart: "no"
