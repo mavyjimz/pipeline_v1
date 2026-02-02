@@ -4,7 +4,5 @@ services:
     container_name: mlops_pipeline_engine
     ports:
       - "8501:8501"
-    # volumes:
-    #   - .:/app  <-- We comment this out so Windows doesn't hide our installation
-    environment:
-      - PYTHONUNBUFFERED=1
+    # VOLUME REMOVED: This prevents Windows from hiding the installed Streamlit
+    restart: always
