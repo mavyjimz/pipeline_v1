@@ -20,4 +20,4 @@ RUN pip install --default-timeout=1000 --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set the exact path to the execution script
-CMD ["streamlit", "run", "src/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["python", "-m", "streamlit", "run", "src/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
