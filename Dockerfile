@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Instead of running the dashboard, we tell the container to just wait for us
-ENTRYPOINT ["tail", "-f", "/dev/null"]
+CMD ["streamlit", "run", "src/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
