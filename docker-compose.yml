@@ -4,6 +4,8 @@ services:
   pipeline:
     build: .
     container_name: mlops_pipeline_engine
+    ports:
+      - "8501:8501"
     volumes:
       # Bridge 1: The Code (Project Folder)
       # Maps local project files to the "Hotel Room" /app
