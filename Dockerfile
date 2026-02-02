@@ -1,22 +1,20 @@
 FROM python:3.9-slim
-
-# Force the system to look in the exact folder where pip installs things
-ENV PYTHONPATH="/usr/local/lib/python3.9/site-packages"
-ENV PATH="/usr/local/bin:${PATH}"
-ENV PYTHONUNBUFFERED=1
-
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/usr/local/bin:/usr/bin:/bin:/root/.local/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-# We install globally to the system path to ensure 100% visibility
-RUN pip install --no-cache-dir -r requirements.txt
+# Install with --force-reinstall to ensure no ghost links
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8501
+# DISCOVERY: This will print exactly where streamlit is during the build
+RUN which streamlit && streamlit --version
 
-# Using Shell Form to ensure the ENV variables above are active
-ENTRYPOINT python3 -m streamlit run src/dashboard.py --server.port=8501 --server.address=0.0.0.0
+EXPOSE 8501
+ENTRYPOINT ["python3", "-m", "streamlit", "run", "src/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]

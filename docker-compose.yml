@@ -4,5 +4,7 @@ services:
     container_name: mlops_pipeline_engine
     ports:
       - "8501:8501"
-    # VOLUME REMOVED: This prevents Windows from hiding the installed Streamlit
+    # We keep volumes commented out to prevent Windows from hiding the internal files
+    # volumes:
+    #   - .:/app
     restart: always
