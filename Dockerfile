@@ -1,23 +1,30 @@
-# Use an official Python runtime as a parent image
+# Use a specific, stable version of Python
 FROM python:3.9-slim
 
-# Set the working directory in the container
-WORKDIR /app
+# Set environment variables to force the PATH
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/home/appuser/.local/bin:${PATH}"
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Create the internal bridge folders (Matching your Compose mounts)
-RUN mkdir -p /app/input_data /app/shared_output
+# Create a non-root user for safety
+RUN useradd -m appuser
+USER appuser
+WORKDIR /home/appuser/app
 
-# Copy the requirements file and install dependencies
-COPY requirements.txt .
-RUN pip install --default-timeout=1000 --no-cache-dir -r requirements.txt
+# Copy and install requirements with extra patience
+COPY --chown=appuser:appuser requirements.txt .
+RUN pip install --user --no-cache-dir --default-timeout=1000 -r requirements.txt
 
-# Copy the rest of the application code
-COPY . .
+# Copy the rest of the code
+COPY --chown=appuser:appuser . .
 
-# Set the exact path to the execution script
+# Expose the Streamlit port
+EXPOSE 8501
+
+# The "Bulletproof" launch command
 ENTRYPOINT ["python3", "-m", "streamlit", "run", "src/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
