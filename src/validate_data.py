@@ -1,27 +1,26 @@
 import pandas as pd
 import os
 
-def validate_sales_data(file_path):
-    print("LOG: Starting validation on: " + file_path)
+def validate_schema():
+    raw_path = 'input_data/raw/superstore_sales.csv'
+    # The 'Truth' list we just found in image_fbceaa.png
+    required_columns = ['Order Date', 'Ship Mode', 'Segment', 'Region', 'Category', 'Sales']
     
-    if not os.path.exists(file_path):
-        print("ERROR: File not found.")
-        return
+    if not os.path.exists(raw_path):
+        print(f"CRITICAL: Raw data missing at {raw_path}")
+        return False
 
-    try:
-        df = pd.read_csv(file_path)
-        
-        # The Core Check
-        if 'Sales' not in df.columns:
-            print("ALARM: Missing 'Sales' column!")
-        else:
-            print("SUCCESS: 'Sales' column verified.")
-            print(df.head())
-            
-    except Exception as e:
-        print("ERROR: Could not read CSV. Details: " + str(e))
+    df = pd.read_csv(raw_path, encoding='latin1', nrows=5)
+    actual_columns = df.columns.tolist()
+    
+    missing = [col for col in required_columns if col not in actual_columns]
+    
+    if missing:
+        print(f"VALIDATION FAILED: Missing columns {missing}")
+        return False
+    
+    print("VALIDATION SUCCESS: All required columns present.")
+    return True
 
 if __name__ == "__main__":
-    # Drive D project path
-    target_file = r'D:\MLOps\projects\pipeline_v1\input_data\superstore_sales.csv'
-    validate_sales_data(target_file)
+    validate_schema()
