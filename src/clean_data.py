@@ -2,8 +2,8 @@ import pandas as pd
 import os
 
 def clean_data():
-    input_file = 'input_data/raw/superstore_sales.csv'
-    output_file = 'input_data/processed/sales_summary.csv'
+    input_file = 'shared_data/superstore_sales.csv'
+    output_file = 'shared_data/cleaned_sales.csv'
     
     print("Starting Phase 3 Cleaning & Encoding...")
 
