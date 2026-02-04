@@ -2,40 +2,31 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-def generate_learning_curve():
-    print("[START]: Lesson 23 - Generating AI Learning Report")
-    
-    # 1. Path Management (Relative to the script location)
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    history_file = r"D:\MLOps\reports\loss_history.csv"
-    output_image = r"D:\MLOps\reports\learning_curve.png"
+def plot_performance():
+    input_file = 'reports/final_predictions.csv'
+    output_plot = 'reports/performance_chart.png'
 
-    # 2. Safety Check
-    if not os.path.exists(history_file):
-        print(f"[ERROR]: History file not found at: {history_file}")
+    if not os.path.exists(input_file):
+        print("ERROR: Run predict_sales.py first.")
         return
 
-    # 3. Load the data
-    df = pd.read_csv(history_file)
+    df = pd.read_csv(input_file)
 
-    # 4. Create the Plot
     plt.figure(figsize=(10, 6))
-    plt.plot(df['epoch'], df['loss'], color='#00ffcc', linewidth=2, label='Training Loss')
+    plt.scatter(df['Sales'], df['Predicted_Sales'], alpha=0.5, color='blue')
     
-    # Styling for the Pipeline Warehouse
-    plt.title('Superstore Sales AI: Learning Curve (RX 580)', fontsize=14, pad=15)
-    plt.xlabel('Epochs (Learning Cycles)', fontsize=12)
-    plt.ylabel('Loss (Error Rate)', fontsize=12)
-    plt.grid(True, linestyle='--', alpha=0.3)
-    plt.legend()
+    # Draw the "Perfect Prediction" line
+    max_val = max(df['Sales'].max(), df['Predicted_Sales'].max())
+    plt.plot([0, max_val], [0, max_val], color='red', linestyle='--')
     
-    # Background color adjustment for better visibility
-    plt.gca().set_facecolor('#f9f9f9')
-
-    # 5. Save and Show
-    plt.savefig(output_image)
-    print(f"[SUCCESS]: Report saved to {output_image}")
-    plt.show()
+    plt.xlabel('Actual Sales')
+    plt.ylabel('Predicted Sales')
+    plt.title('Phase 4: Actual vs. Predicted Sales Performance')
+    plt.grid(True)
+    
+    os.makedirs('reports', exist_ok=True)
+    plt.savefig(output_plot)
+    print(f"SUCCESS: Performance chart saved to {output_plot}")
 
 if __name__ == "__main__":
-    generate_learning_curve()
+    plot_performance()
