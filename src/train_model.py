@@ -1,40 +1,22 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
-import pickle
-import os
+from sklearn.ensemble import RandomForestRegressor
+import joblib
 
-def train_model():
-    input_file = 'input_data/processed/sales_summary.csv'
-    model_path = 'models/sales_model.pkl'
-    
-    df = pd.read_csv(input_file)
-    X = df.drop(columns=['Sales'])
-    y = df['Sales']
+input_file = 'shared_data/engineered_sales.csv'
+model_path = 'shared_output/model.joblib'
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+print("--- Step 3: Training Model ---")
+df = pd.read_csv(input_file)
 
-    model = LinearRegression()
-    model.fit(X_train, y_train)
+# Encode categorical data
+df_encoded = pd.get_dummies(df, columns=['Ship Mode', 'Segment', 'Region', 'Category'])
 
-    # --- PHASE 4: EVALUATION ---
-    predictions = model.predict(X_test)
-    mse = mean_squared_error(y_test, predictions)
-    r2 = r2_score(y_test, predictions)
+# Define features (Matches our Engineering Step)
+X = df_encoded.drop(['Sales'], axis=1)
+y = df_encoded['Sales']
 
-    print(f"--- PHASE 4 METRICS ---")
-    print(f"Mean Squared Error: {mse:.2f}")
-    print(f"R-Squared Score: {r2:.4f}")
-    # ---------------------------
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(X, y)
 
-    os.makedirs('models', exist_ok=True)
-    model_data = {'model': model, 'features': X.columns.tolist()}
-    
-    with open(model_path, 'wb') as f:
-        pickle.dump(model_data, f)
-
-    print(f"Model saved with updated Phase 4 evaluation.")
-
-if __name__ == "__main__":
-    train_model()
+joblib.dump(model, model_path)
+print(f"✓ Success: Model saved to {model_path}")

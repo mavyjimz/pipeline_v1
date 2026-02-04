@@ -1,20 +1,23 @@
 import pandas as pd
+import os
 
+# Paths synced with Docker Volume Bridge
 input_file = 'shared_data/superstore_sales.csv'
 output_file = 'shared_data/cleaned_sales.csv'
 
+print("--- Step 1: Cleaning Data ---")
 df = pd.read_csv(input_file)
 
-# --- SMART DATA ADAPTATION (Lesson #545) ---
-# If Profit is missing, simulate it as 15% of Sales so the pipeline doesn't break
+# Logic to handle the 'notorious' missing columns
 if 'Profit' not in df.columns:
-    print("WARNING: Profit column missing! Simulating 15% margin for pipeline flow.")
+    print("! Warning: Profit missing. Simulating 15% margin.")
     df['Profit'] = df['Sales'] * 0.15
 
-# Now we can safely keep these columns
+# Keep only what we verified exists + our simulated Profit
 categorical_cols = ['Ship Mode', 'Segment', 'Region', 'Category']
-numeric_cols = ['Profit', 'Sales'] # We can add Quantity/Discount if they exist
-df = df[categorical_cols + numeric_cols]
+numeric_cols = ['Sales', 'Profit'] 
 
-df.to_csv(output_file, index=False)
-print(f"Final data saved to: {output_file}")
+df_cleaned = df[categorical_cols + numeric_cols].dropna()
+
+df_cleaned.to_csv(output_file, index=False)
+print(f"✓ Success: Saved to {output_file}")
