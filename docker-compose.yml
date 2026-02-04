@@ -5,6 +5,7 @@ services:
     volumes:
       - .:/app
       - D:/MLOps/projects/pipeline_v1/shared_data:/app/shared_data
+      - D:/MLOps/projects/pipeline_v1/shared_output:/app/shared_output
     ports:
       - "8501:8501"
     restart: "no"
