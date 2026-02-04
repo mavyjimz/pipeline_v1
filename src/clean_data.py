@@ -5,16 +5,13 @@ output_file = 'shared_data/cleaned_sales.csv'
 
 df = pd.read_csv(input_file)
 
-# --- SMART DATA ADAPTATION (Lesson #556) ---
 if 'Profit' not in df.columns:
     df['Profit'] = df['Sales'] * 0.15
 
-# EXPANDED FEATURE LIST: Adding Sub-Category and Segment for more "IQ"
-categorical_cols = ['Ship Mode', 'Segment', 'Region', 'Category', 'Sub-Category']
+# DEEP FEATURES: State and Product ID give the model specific 'anchors'
+categorical_cols = ['Ship Mode', 'Segment', 'Region', 'Category', 'Sub-Category', 'State']
 numeric_cols = ['Profit', 'Sales']
 
-# Filter only what we need
-df = df[categorical_cols + numeric_cols]
-
+df = df[categorical_cols + numeric_cols].dropna()
 df.to_csv(output_file, index=False)
-print(f"Final data saved to: {output_file}")
+print(f"Deep data saved to: {output_file}")
