@@ -1,28 +1,39 @@
 import pandas as pd
-import joblib
+import pickle
 import os
 
-def run_predictions():
+def generate_predictions():
     model_path = 'models/sales_model.pkl'
-    # Use the same processed data for a final test prediction
     input_file = 'input_data/processed/sales_summary.csv'
-    output_path = 'reports/final_predictions.csv'
+    output_file = 'reports/final_predictions.csv'
+
+    print("Starting Phase 3 Dynamic Predictions...")
 
     if not os.path.exists(model_path):
-        print("Error: Model file not found. Please run training first.")
+        print("ERROR: Model not found. Run train_model.py first.")
         return
 
-    model = joblib.load(model_path)
+    # 1. Load Model AND Feature Metadata
+    with open(model_path, 'rb') as f:
+        model_data = pickle.load(f)
+    
+    model = model_data['model']
+    required_features = model_data['features']
+
+    # 2. Load Processed Data
     df = pd.read_csv(input_file)
-    
-    X = df.drop(columns=['Sales'])
+    X = df[required_features] # Ensure we use the exact same columns used in training
+
+    # 3. Predict
     predictions = model.predict(X)
-    
     df['Predicted_Sales'] = predictions
-    
+
+    # 4. Save results
     os.makedirs('reports', exist_ok=True)
-    df.to_csv(output_path, index=False)
-    print(f"Success: Predictions saved to {output_path}")
+    df.to_csv(output_file, index=False)
+    
+    print(f"SUCCESS: Generated predictions for {len(df)} rows using {len(required_features)} features.")
+    print(f"Results saved to: {output_file}")
 
 if __name__ == "__main__":
-    run_predictions()
+    generate_predictions()
