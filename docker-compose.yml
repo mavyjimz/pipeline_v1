@@ -2,8 +2,9 @@ services:
   pipeline_engine:
     build: .
     container_name: mlops_pipeline_engine
-    # No ports needed for debugging, but we can leave them
+    volumes:
+      - .:/app
+      - D:/MLOps/projects/pipeline_v1/shared_data:/app/shared_data
     ports:
       - "8501:8501"
-    # Ensure no volumes are overriding our internal files
     restart: "no"
