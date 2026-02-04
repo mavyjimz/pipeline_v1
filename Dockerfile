@@ -1,18 +1,26 @@
 FROM python:3.9-slim
-WORKDIR /app
+
+# Prevent Python from generating __pycache__ and ensure real-time logging
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# We add every possible path we've suspected today
+# Set the working directory
+WORKDIR /app
+
+# Add every possible path for internal tool access
 ENV PATH="/usr/local/bin:/root/.local/bin:${PATH}"
 
+# Install system dependencies and clean up cache to keep image small
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
+# Install Python requirements
 COPY requirements.txt .
-# Using the most standard install possible
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the project files
 COPY . .
 
-# Instead of running the dashboard, we tell the container to just wait for us
+# Set the default command to run the dashboard
 CMD ["streamlit", "run", "src/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
