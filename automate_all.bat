@@ -15,11 +15,10 @@ echo [%DATE% %TIME%] SUCCESS: Visuals Updated >> %LOGFILE%
 
 :: 3. Finalization
 echo [%DATE% %TIME%] --- Phase 4: Sequence Complete --- >> %LOGFILE%
-echo -------------------------------------------------- >> %LOGFILE%
 
-echo.
-echo ======================================================
-echo AUTOMATION COMPLETE: CPU i5-12400f processed the load.
-echo Check reports\automation_log.txt for proof.
-echo ======================================================
+:: NEW: Automatically open the dashboard in Chrome
+start chrome "http://localhost:8000"
+
+echo -------------------------------------------------- >> %LOGFILE%
+echo AUTOMATION COMPLETE: Dashboard launched in Chrome.
 pause
