@@ -1,0 +1,16 @@
+{
+    "project_name": "Superstore MLOps Pipeline",
+    "model_version": "v1.5_HighComplexity",
+    "performance_metrics": {
+        "r2_score": 0.0503,
+        "mean_absolute_error": 238.02,
+        "status": "Stagnant/Underfitting"
+    },
+    "data_summary": {
+        "total_rows": 9800,
+        "top_predicted_sale": 440.4524531392742
+    },
+    "visual_artifacts": {
+        "chart_path": "reports/performance_chart.png"
+    }
+}
