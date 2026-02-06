@@ -1,19 +1,35 @@
 import os
 import time
 import subprocess
-from narrator_utils import type_message
+from narrator_utils import type_message, fast_scan
 
 def run_presentation():
+    # SET TERMINAL TO MATRIX GREEN
+    os.system('color 0a') 
     os.system('cls')
     
-    # --- 1st: INTRO ---
-    type_message(">>> [SYSTEM INITIALIZED]: MLOps Presentation Layer Active")
-    time.sleep(3) # Added 3s delay per your request
+    # --- STEP 2: THE HACKER HEADER ---
+    print("""
+    ##########################################################
+    # SYSTEM: MLOPS_PIPELINE_V1          STATUS: OPERATIONAL #
+    # OPERATOR: VANJUNN PONGASI          CO-PILOT: GEMINI    #
+    # HARDWARE: INTEL i5-12400f          LOCATION: PHILIPPINES #
+    ##########################################################
+    """)
+    time.sleep(1)
+
+    # --- THE SYSTEM SCAN (Visual Noise) ---
+    fast_scan(12) 
+    time.sleep(1)
+
+    # --- ACT 1: INTRO (Paced with 3s delays) ---
+    type_message(">>> [BOOT SEQUENCE COMPLETE]: Initializing Narrative Layer...")
+    time.sleep(3)
     type_message("\n'Hello world. My name is Vanjunn Pongasi. With me is Gemini,")
     type_message("executing our project thru Python for MLOps.'")
     time.sleep(3)
 
-    # --- 2nd: PROJECT DEPTH ---
+    # --- ACT 2: PROJECT DEPTH ---
     type_message("\n>>> [PROJECT SCOPE]:")
     type_message("- We built a full-scale MLOps Pipeline using 'superstore_sales.csv'.")
     time.sleep(3)
@@ -22,7 +38,7 @@ def run_presentation():
     type_message("- Solved: Handled data corruption, JSON schema mapping, and environment sync.")
     time.sleep(3)
 
-    # --- 3rd: HARDWARE CONSTRAINTS ---
+    # --- ACT 3: HARDWARE CONSTRAINTS ---
     type_message("\n>>> [HARDWARE SIGNATURE]:")
     type_message("- Environment: Intel i5-12400f | 16GB DDR4 RAM.")
     time.sleep(3)
@@ -31,16 +47,7 @@ def run_presentation():
     type_message("- Result: Proven efficiency; high performance without server costs.")
     time.sleep(3)
 
-    # --- 4th: THE WORKFLOW ---
-    type_message("\n>>> [THE WORKFLOW STRATEGY]:")
-    type_message("A. PRE-FLIGHT: check_data.py ensures raw data integrity.")
-    time.sleep(3)
-    type_message("B. ORCHESTRATION: run_pipeline.sh manages Docker Linux world.")
-    time.sleep(3)
-    type_message("   Steps: Cleaning -> Engineering -> Training -> Predicting.")
-    time.sleep(3)
-
-    # --- EXECUTION PHASE ---
+    # --- ACT 4: EXECUTION PHASE ---
     type_message("\n" + "="*50)
     type_message(">>> STARTING LIVE PIPELINE EXECUTION...")
     type_message("="*50)
@@ -62,12 +69,12 @@ def run_presentation():
     type_message(">>> Displaying live results for 15 seconds...")
     time.sleep(15) 
 
-    # --- NEW: CLOSE CHROME ---
+    # CLEANUP: CLOSE CHROME
     type_message(">>> [CLEANUP]: Terminating Dashboard view...")
-    os.system("taskkill /f /im chrome.exe") # This force-closes Chrome
+    os.system("taskkill /f /im chrome.exe") 
     time.sleep(2)
 
-    # --- 6th: FINAL CREDITS ---
+    # --- FINAL CREDITS ---
     os.system('cls') 
     print("\n" + "X"*50)
     type_message("MISSION ACCOMPLISHED")
