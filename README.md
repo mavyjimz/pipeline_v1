@@ -1,11 +1,25 @@
 # 🚀 MLOps Pipeline Workstation 2026
 
-## 🛰️ Current Build Status: PHASE 1 COMPLETE
-The "Data Guard" is now operational. The pipeline can officially ingest raw CSV data and identify health risks before processing.
+## 🛠️ Project Overview
+A production-grade MLOps pipeline designed for automated data validation, 
+containerized execution, and real-time visualization of Superstore Sales data. 
+Engineered for reliability on consumer-grade hardware (Intel i5-12400f).
 
-### ✅ Completed Milestones:
-1. **The Infrastructure:** Established professional folder hierarchy on D: Drive.
-2. **The Cloud Handshake:** Successfully linked local development to GitHub repository (`mavyjimz/pipeline_v1`).
-3. **The Guard (`src/check_data.py`):** Implemented automated health checks for missing values and dataset integrity.
+## 📽️ Technical Demonstration
+*(Link your Vanjunn_Pongasi_MLOps.mp4 video here once uploaded to a hosting service)*
 
----
+## 🧠 The Co-Pilot Workflow
+This project was developed through a strategic partnership between 
+**Lead Engineer Vanjunn Pongasi** and **Gemini (AI Co-Pilot)**, 
+demonstrating the efficiency of AI-augmented engineering in 2026.
+
+## 🏗️ Core Architecture
+- **Data Integrity**: Automated health checks via `src/check_data.py`.
+- **Infrastructure**: Containerized environment using **Docker** and **Docker-Compose**.
+- **Orchestration**: Seamless pipeline triggers using custom Batch and Python scripts.
+- **Hardware Optimization**: Tailored VRAM and CPU management for RX 580 / i5-12400f.
+
+## 📈 Current Status: PHASE 1 COMPLETE
+- [x] Professional D: Drive folder hierarchy established.
+- [x] Cloud Handshake: GitHub repository fully synced.
+- [x] The Guard: Implemented automated data validation logic.
