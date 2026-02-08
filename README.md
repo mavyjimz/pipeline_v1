@@ -6,7 +6,7 @@ containerized execution, and real-time visualization of Superstore Sales data.
 Engineered for reliability on consumer-grade hardware (Intel i5-12400f).
 
 ## 📽️ Technical Demonstration
-*(Link your Vanjunn_Pongasi_MLOps.mp4 video here once uploaded to a hosting service)*
+https://youtu.be/x1l1_BSySqI
 
 ## 🧠 The Co-Pilot Workflow
 This project was developed through a strategic partnership between 
