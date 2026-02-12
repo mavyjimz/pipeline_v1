@@ -1,7 +1,7 @@
 # MLOps Data Pipeline for Sales Analysis
 
-[![Demo Video](https://img.shields.io/badge/Demo%20Video-YouTube-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/x111_BSxqI)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/vanjunn-pongasi-mlops)
+Demo Video :https://youtu.be/x1l1_BSySqI
 
 ## Project Overview  
 Production-grade MLOps pipeline built via **independent R&D** (2023–present):  
