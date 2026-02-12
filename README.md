@@ -1,6 +1,6 @@
 # MLOps Data Pipeline for Sales Analysis
 
-[![Demo Video](https://img.shields.io/badge/Demo%20Video-YouTube-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/x111_BSxqI)  
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-YouTube-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/x111_BSxqI)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/vanjunn-pongasi-mlops)
 
 ## Project Overview  
